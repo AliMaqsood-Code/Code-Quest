@@ -1,6 +1,4 @@
-
 from datetime import datetime, timezone
-
 from app import db
 from app.utils.hashing import hash_password, verify_password
 from app.utils.tokenManagement import generate_token, hash_token
