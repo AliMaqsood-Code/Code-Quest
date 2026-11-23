@@ -11,7 +11,7 @@ os.environ.setdefault("SECRET_KEY", "smoke-test")
 from jinja2 import BaseLoader
 
 from seed import (
-    app, seed_access_control, seed_admin, seed_languages, seed_problems,
+    app, seed_access_control, seed_achievements, seed_admin, seed_languages, seed_problems,
 )
 from app import db
 from app.models import (
@@ -56,6 +56,7 @@ with app.app_context():
     admin_user = seed_admin(roles)
     seed_languages()
     seed_problems(admin_user)
+    seed_achievements()
     db.session.commit()
     lang_id = LanguageVersion.query.first().language_version_id
 
@@ -256,7 +257,10 @@ call(admin, "POST", "/groups/join", "join with bad code (rejected)", 200, **P(co
 call(admin, "POST", "/groups/join", "join with code", 302, **P(code=raw_code))
 call(admin, "GET", "/groups/1", "member sees group", 200)
 call(user, "POST", "/groups/1/code/revoke", "revoke code", 302)
-call(user, "POST", "/groups/1/members/2/remove", "remove member", 302)
+call(user, "POST", "/groups/1/members/2/remove", "remove owner (rejected)", 302)
+with app.app_context():
+    expect("owner still in group", db.session.get(GroupMember, (1, 2)) is not None)
+call(user, "POST", "/groups/1/members/1/remove", "remove member (admin)", 302)
 call(user, "POST", "/groups/1/invite", "invite to group", 302, **P(username="admin"))
 call(admin, "POST", "/groups/invitations/1/accept", "accept group invitation", 302)
 call(admin, "POST", "/groups/1/leave", "leave group", 302)
@@ -335,6 +339,60 @@ call(user, "POST", "/notifications/preferences", "save preferences", 302,
 with app.app_context():
     prefs = db.session.get(NotificationPreference, tester_id)
     expect("submission alerts switched off", prefs.submission_alerts is False)
+
+# ---------------- solutions ----------------
+from app.models import PublishedSolution, SolutionVote
+
+SOL = lambda t: P(title=t, language_version_id=lang_id,
+                  explanation="how it works", source_code="print(1)")
+
+call(anon, "GET", "/problems/two-sum/solutions", "solution list", 200)
+call(admin, "POST", "/problems/reverse-string/solutions/new",
+     "manager publishes without solving", 302, **SOL("Official way"))
+with app.app_context():
+    expect("1 solution", PublishedSolution.query.count() == 1)
+call(user, "POST", "/problems/reverse-string/solutions/new",
+     "publish without solving (rejected)", 302, **SOL("Cheat"))
+with app.app_context():
+    expect("still 1 solution", PublishedSolution.query.count() == 1)
+call(user, "POST", "/problems/two-sum/solutions/new",
+     "publish after solving", 302, **SOL("My way"))
+with app.app_context():
+    expect("2 solutions", PublishedSolution.query.count() == 2)
+call(anon, "GET", "/solutions/1", "solution detail", 200)
+call(anon, "GET", "/problems/reverse-string/solutions", "solution list with data", 200)
+
+call(user, "POST", "/solutions/1/vote", "upvote", 302, **P(vote_value=1))
+with app.app_context():
+    expect("1 vote", SolutionVote.query.count() == 1)
+call(user, "POST", "/solutions/1/vote", "same vote again removes it", 302, **P(vote_value=1))
+with app.app_context():
+    expect("0 votes", SolutionVote.query.count() == 0)
+call(user, "POST", "/solutions/1/vote", "downvote", 302, **P(vote_value=-1))
+call(user, "POST", "/solutions/1/vote", "switch to upvote", 302, **P(vote_value=1))
+with app.app_context():
+    v = SolutionVote.query.one()
+    expect("one vote, value +1", v.vote_value == 1)
+call(user, "POST", "/solutions/2/vote", "vote on own (rejected)", 302, **P(vote_value=1))
+call(user, "POST", "/solutions/1/vote", "invalid vote value", 302, **P(vote_value=5))
+with app.app_context():
+    expect("still just 1 vote", SolutionVote.query.count() == 1)
+
+call(user, "POST", "/solutions/1/official", "official as user -> 403", 403)
+call(admin, "POST", "/solutions/1/official", "official as admin", 302)
+with app.app_context():
+    expect("marked official", db.session.get(PublishedSolution, 1).is_official)
+
+call(admin, "POST", "/solutions/2/edit", "edit someone else's -> 403", 403, **SOL("Hack"))
+call(user, "POST", "/solutions/2/edit", "edit own", 302, **SOL("My way v2"))
+with app.app_context():
+    expect("title updated", db.session.get(PublishedSolution, 2).title == "My way v2")
+call(user, "POST", "/solutions/1/delete", "delete someone else's -> 403", 403)
+call(admin, "POST", "/solutions/2/delete", "moderator deletes", 302)
+call(admin, "POST", "/solutions/1/delete", "author deletes", 302)
+with app.app_context():
+    expect("solutions and votes gone",
+           PublishedSolution.query.count() == 0 and SolutionVote.query.count() == 0)
 
 
 # ---------------- logout ----------------

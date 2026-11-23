@@ -1,10 +1,11 @@
-from app import create_app, db
 import json
+
+from app import create_app, db
 from app.models import (
     User, Role, Permission, UserProfile, NotificationPreference,
     ProgrammingLanguage, LanguageVersion,
     Problem, ProblemVersion, ProblemCategory, ProblemTag,
-    ProblemExample, TestCase, Achievement,
+    ProblemExample, ProblemHint, TestCase, Achievement,
 )
 
 app = create_app()
@@ -32,6 +33,15 @@ LANGUAGES = {
 
 CATEGORIES = ["Arrays", "Strings", "Math", "Graphs", "Dynamic Programming"]
 TAGS = ["beginner", "hashing", "two-pointers"]
+
+ACHIEVEMENTS = [
+    ("First Solve", "Solve your first problem", 10,
+     {"type": "solved_count", "value": 1}),
+    ("Problem Solver", "Solve 10 different problems", 50,
+     {"type": "solved_count", "value": 10}),
+    ("Veteran", "Solve 50 different problems", 200,
+     {"type": "solved_count", "value": 50}),
+]
 
 ADMIN_USERNAME = "admin"
 ADMIN_EMAIL = "admin@codequest.local"
@@ -88,49 +98,60 @@ def seed_languages():
 
 
 def seed_problem(admin, cats, tags, slug, title, statement, difficulty,
-                 category_names, tag_names, examples, tests):
-    if Problem.query.filter_by(slug=slug).first():
-        return
-    problem = Problem(
-        author_id=admin.user_id,
-        title=title,
-        slug=slug,
-        statement=statement,
-        difficulty=difficulty,
-        time_limit_ms=1000,
-        memory_limit_mb=256,
-        visibility="public",
-        status="published",
-    )
-    problem.categories = [cats[n] for n in category_names]
-    problem.tags = [tags[n] for n in tag_names]
-    problem.versions = [
-        ProblemVersion(
-            version_no=1,
-            statement_snapshot=statement,
-            edited_by=admin.user_id,
+                 category_names, tag_names, examples, tests, hints=()):
+    problem = Problem.query.filter_by(slug=slug).first()
+
+    if problem is None:
+        problem = Problem(
+            author_id=admin.user_id,
+            title=title,
+            slug=slug,
+            statement=statement,
+            difficulty=difficulty,
+            time_limit_ms=1000,
+            memory_limit_mb=256,
+            visibility="public",
+            status="published",
         )
-    ]
-    problem.examples = [
-        ProblemExample(
-            example_order=i,
-            input_text=inp,
-            output_text=out,
-            explanation=expl,
-        )
-        for i, (inp, out, expl) in enumerate(examples, start=1)
-    ]
-    problem.test_cases = [
-        TestCase(
-            case_name=f"case {i}",
-            input_data=inp,
-            expected_output=out,
-            is_sample=is_sample,
-            is_hidden=not is_sample,
-        )
-        for i, (inp, out, is_sample) in enumerate(tests, start=1)
-    ]
-    db.session.add(problem)
+        problem.categories = [cats[n] for n in category_names]
+        problem.tags = [tags[n] for n in tag_names]
+        problem.versions = [
+            ProblemVersion(
+                version_no=1,
+                statement_snapshot=statement,
+                edited_by=admin.user_id,
+            )
+        ]
+        db.session.add(problem)
+
+    # Children are filled only when missing, so re-running the seed is safe
+    # and databases created by an older seed pick up any new content.
+    if not problem.examples:
+        problem.examples = [
+            ProblemExample(
+                example_order=i,
+                input_text=inp,
+                output_text=out,
+                explanation=expl,
+            )
+            for i, (inp, out, expl) in enumerate(examples, start=1)
+        ]
+    if not problem.hints:
+        problem.hints = [
+            ProblemHint(hint_order=i, hint_text=text)
+            for i, text in enumerate(hints, start=1)
+        ]
+    if not problem.test_cases:
+        problem.test_cases = [
+            TestCase(
+                case_name=f"case {i}",
+                input_data=inp,
+                expected_output=out,
+                is_sample=is_sample,
+                is_hidden=not is_sample,
+            )
+            for i, (inp, out, is_sample) in enumerate(tests, start=1)
+        ]
 
 
 def seed_problems(admin):
@@ -158,6 +179,11 @@ def seed_problems(admin):
             ("3 6\n3 2 4", "1 2", False),
             ("2 6\n3 3", "0 1", False),
         ],
+        hints=[
+            "Checking every pair works but takes O(n^2). Can you do better?",
+            "Remember each number's index in a dictionary as you scan.",
+            "For each number x, look up whether target - x was already seen.",
+        ],
     )
 
     seed_problem(
@@ -174,16 +200,11 @@ def seed_problems(admin):
             ("a", "a", False),
             ("racecar", "racecar", False),
         ],
+        hints=[
+            "Think about reading the string from the last character to the first.",
+            "Python slicing accepts a step, and a negative step walks backwards.",
+        ],
     )
-
-ACHIEVEMENTS = [
-    ("First Solve", "Solve your first problem", 10,
-     {"type": "solved_count", "value": 1}),
-    ("Problem Solver", "Solve 10 different problems", 50,
-     {"type": "solved_count", "value": 10}),
-    ("Veteran", "Solve 50 different problems", 200,
-     {"type": "solved_count", "value": 50}),
-]
 
 
 def seed_achievements():

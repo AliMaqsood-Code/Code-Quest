@@ -11,6 +11,7 @@ def register_blueprints(app):
     from app.routes.learning import learning_bp
     from app.routes.notifications import notifications_bp
     from app.routes.achievements import achievements_bp
+    from app.routes.solutions import solutions_bp
 
     app.register_blueprint(main_bp)
     app.register_blueprint(auth_bp)
@@ -24,3 +25,4 @@ def register_blueprints(app):
     app.register_blueprint(learning_bp)
     app.register_blueprint(notifications_bp)
     app.register_blueprint(achievements_bp)
+    app.register_blueprint(solutions_bp)
