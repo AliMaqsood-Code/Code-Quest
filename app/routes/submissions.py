@@ -7,6 +7,7 @@ from app.forms.submission import STATUSES, ReviewForm, SubmissionForm
 from app.models import Contest, Problem, Submission
 from app.utils.auth import log_action, login_required, permission_required
 from app.utils.contest import can_submit_to_contest, recalc_leaderboard
+from app.utils.engagement import award_for_accepted, notify
 
 submissions_bp = Blueprint("submissions", __name__, url_prefix="/submissions")
 
@@ -118,15 +119,26 @@ def update_status(submission_id):
     form = ReviewForm()
 
     if form.validate_on_submit():
+        previous = submission.status
         submission.status = form.status.data
         if submission.contest_id:
             recalc_leaderboard(submission.contest)
+
+        if submission.status != previous:
+            notify(
+                submission.user_id, "submission", "Submission reviewed",
+                f"Your submission to {submission.problem.title} is now: "
+                f"{submission.status.replace('_', ' ')}.",
+                url_for("submissions.detail",
+                        submission_id=submission.submission_id),
+            )
+            if submission.status == "accepted":
+                award_for_accepted(submission)
+
         log_action("submission.review", "submission",
                    submission.submission_id, g.current_user.user_id)
         db.session.commit()
         flash("Submission status updated.", "success")
-    else:
-        flash("Invalid status.", "danger")
 
     return redirect(url_for("submissions.detail",
                             submission_id=submission.submission_id))

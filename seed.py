@@ -1,9 +1,10 @@
 from app import create_app, db
+import json
 from app.models import (
     User, Role, Permission, UserProfile, NotificationPreference,
     ProgrammingLanguage, LanguageVersion,
     Problem, ProblemVersion, ProblemCategory, ProblemTag,
-    ProblemExample, TestCase,
+    ProblemExample, TestCase, Achievement,
 )
 
 app = create_app()
@@ -175,12 +176,33 @@ def seed_problems(admin):
         ],
     )
 
+ACHIEVEMENTS = [
+    ("First Solve", "Solve your first problem", 10,
+     {"type": "solved_count", "value": 1}),
+    ("Problem Solver", "Solve 10 different problems", 50,
+     {"type": "solved_count", "value": 10}),
+    ("Veteran", "Solve 50 different problems", 200,
+     {"type": "solved_count", "value": 50}),
+]
+
+
+def seed_achievements():
+    for name, description, points, criteria in ACHIEVEMENTS:
+        get_or_create(
+            Achievement,
+            {"description": description, "points_reward": points,
+             "criteria_json": json.dumps(criteria)},
+            achievement_name=name,
+        )
+
 
 if __name__ == "__main__":
     with app.app_context():
+        db.create_all()
         roles = seed_access_control()
         admin = seed_admin(roles)
         seed_languages()
         seed_problems(admin)
+        seed_achievements()
         db.session.commit()
         print("Seed complete.")

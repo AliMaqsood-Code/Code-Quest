@@ -13,6 +13,7 @@ from app.models import (
     Discussion, DiscussionComment, DiscussionReaction, Problem,
 )
 from app.utils.auth import log_action, login_required, permission_required
+from app.utils.engagement import notify
 
 discussions_bp = Blueprint("discussions", __name__, url_prefix="/discussions")
 
@@ -242,10 +243,12 @@ def add_comment(discussion_id):
     form = CommentForm()
     if form.validate_on_submit():
         parent_id = form.parent_comment_id.data or None
+        recipients = {discussion.user_id}
         if parent_id is not None:
             parent = db.session.get(DiscussionComment, parent_id)
             if parent is None or parent.discussion_id != discussion_id:
                 abort(400)
+            recipients.add(parent.user_id)
 
         db.session.add(DiscussionComment(
             discussion_id=discussion_id,
@@ -253,6 +256,12 @@ def add_comment(discussion_id):
             parent_comment_id=parent_id,
             body=form.body.data,
         ))
+
+        recipients.discard(g.current_user.user_id)
+        for uid in recipients:
+            notify(uid, "discussion", f"New reply in: {discussion.title}",
+                   f"{g.current_user.username} commented in a discussion "
+                   "you're part of.", detail_url)
         db.session.commit()
         flash("Comment posted.", "success")
     else:

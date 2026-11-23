@@ -14,6 +14,7 @@ from app.models import (
 )
 from app.utils.auth import log_action, login_required, permission_required
 from app.utils.contest import contest_phase, is_registered, recalc_leaderboard
+from app.utils.engagement import notify
 
 contests_bp = Blueprint("contests", __name__, url_prefix="/contests")
 
@@ -304,8 +305,19 @@ def add_announcement(contest_id):
             author_id=g.current_user.user_id,
             message=form.message.data,
         ))
+
+        for reg in ContestRegistration.query.filter_by(
+                contest_id=contest.contest_id):
+            notify(
+                reg.user_id, "contest",
+                f"New announcement: {contest.title}",
+                form.message.data[:300],
+                url_for("contests.detail", contest_id=contest.contest_id)
+            )
+
         db.session.commit()
         flash("Announcement posted.", "success")
+
     else:
         _flash_errors(form)
 
