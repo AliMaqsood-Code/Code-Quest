@@ -749,6 +749,21 @@ code {
     color: var(--warn);
 }
 
+/* Code / example blocks */
+
+.code-block {
+    background: var(--code);
+    border: 1px solid var(--bd);
+    border-radius: 8px;
+    padding: 12px 14px;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--ink);
+    white-space: pre-wrap;
+    overflow-x: auto;
+}
+
 /* Animation */
 
 .fade-in {

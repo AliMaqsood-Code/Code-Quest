@@ -1,0 +1,206 @@
+{% extends "base.html" %}
+
+{% block title %}{{ contest.title }} - Code Quest{% endblock %}
+
+{% block breadcrumb %}
+    <a href="{{ url_for('contests.index') }}">Contests</a>
+    <span>/</span> {{ contest.title }}
+{% endblock %}
+
+{% block content %}
+
+<a href="{{ url_for('contests.index') }}" class="small">← Back to contests</a>
+
+<div class="row g-3 mt-1">
+
+    <!-- Main column -->
+    <div class="col-lg-8">
+
+        <!-- Overview -->
+        <div class="card p-4 mb-3">
+
+            <div class="d-flex flex-wrap align-items-start justify-content-between gap-2 mb-2">
+                <h1 class="page-title mb-0">{{ contest.title }}</h1>
+                <span class="badge st-{{ phase }} fs-6">{{ phase }}</span>
+            </div>
+
+            <div class="text-secondary small mb-3">
+                {{ contest.starts_at.strftime('%b %d, %Y %H:%M') }}
+                →
+                {{ contest.ends_at.strftime('%b %d, %Y %H:%M') }} UTC
+                ·
+                {{ ((contest.ends_at - contest.starts_at).total_seconds() / 3600)|round(1) }} hours
+            </div>
+
+            {% if contest.description %}
+                <div style="white-space: pre-wrap;">{{ contest.description }}</div>
+            {% else %}
+                <div class="text-secondary">No description provided.</div>
+            {% endif %}
+
+        </div>
+
+
+        <!-- Problems -->
+        <div class="card mb-3">
+
+            <div class="p-3 pb-2"><b>Problems</b></div>
+
+            {% if contest_problems %}
+
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Title</th>
+                                <th>Difficulty</th>
+                                <th>Points</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            {% for cp in contest_problems %}
+                                <tr>
+
+                                    <td class="text-secondary">{{ cp.sequence_no }}</td>
+
+                                    <td>
+                                        <a href="{{ url_for('problems.detail', slug=cp.problem.slug) }}" class="fw-semibold">
+                                            {{ cp.problem.title }}
+                                        </a>
+                                    </td>
+
+                                    <td>
+                                        <span class="badge diff-{{ cp.problem.difficulty }}">
+                                            {{ cp.problem.difficulty|capitalize }}
+                                        </span>
+                                    </td>
+
+                                    <td>{{ cp.points }}</td>
+
+                                    <td class="text-end">
+                                        {% if phase == 'running' and registered %}
+                                            <a href="{{ url_for('submissions.submit', slug=cp.problem.slug, contest=contest.contest_id) }}"
+                                               class="btn btn-primary btn-sm">
+                                                Submit
+                                            </a>
+                                        {% endif %}
+                                    </td>
+
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+
+                    </table>
+                </div>
+
+            {% else %}
+
+                <div class="text-center text-secondary p-4 border-top">
+
+                    {% if phase == 'cancelled' %}
+                        This contest was cancelled.
+                    {% elif not current_user %}
+                        <a href="{{ url_for('auth.login') }}" class="auth-link">Sign in</a>
+                        and register to see the problems once the contest starts.
+                    {% elif not registered %}
+                        Register to see the problems once the contest starts.
+                    {% elif phase == 'upcoming' %}
+                        The problems will appear here when the contest starts.
+                    {% else %}
+                        No problems have been added to this contest.
+                    {% endif %}
+
+                </div>
+
+            {% endif %}
+
+        </div>
+
+
+        <!-- Announcements -->
+        <div class="card">
+
+            <div class="p-3 pb-2"><b>Announcements</b></div>
+
+            {% for a in announcements %}
+                <div class="px-3 py-3 border-top">
+                    <div style="white-space: pre-wrap;">{{ a.message }}</div>
+                    <div class="small text-secondary mt-1">
+                        {{ a.author.username }} · {{ a.published_at.strftime('%b %d, %H:%M') }}
+                    </div>
+                </div>
+            {% else %}
+                <div class="text-center text-secondary p-4 border-top">
+                    No announcements yet.
+                </div>
+            {% endfor %}
+
+        </div>
+
+    </div>
+
+
+    <!-- Side column -->
+    <div class="col-lg-4">
+
+        <div class="card p-3 mb-3">
+
+            <div class="d-flex justify-content-between mb-3">
+                <span class="text-secondary">Participants</span>
+                <b>{{ registration_count }}</b>
+            </div>
+
+            {% if phase in ('upcoming', 'running') %}
+
+                {% if not current_user %}
+
+                    <a href="{{ url_for('auth.login') }}" class="btn btn-primary w-100">
+                        Sign in to register
+                    </a>
+
+                {% elif registered %}
+
+                    <div class="alert alert-success py-2 text-center mb-2">You are registered ✓</div>
+
+                    {% if phase == 'upcoming' %}
+                        <form method="post" action="{{ url_for('contests.unregister', contest_id=contest.contest_id) }}">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="btn btn-ghost w-100">Withdraw</button>
+                        </form>
+                    {% endif %}
+
+                {% else %}
+
+                    <form method="post" action="{{ url_for('contests.register', contest_id=contest.contest_id) }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn btn-primary w-100">Register</button>
+                    </form>
+
+                {% endif %}
+
+            {% elif phase == 'ended' %}
+
+                <div class="text-secondary small text-center">This contest has ended.</div>
+
+            {% endif %}
+
+        </div>
+
+
+        <div class="card p-3">
+
+            <a href="{{ url_for('contests.leaderboard', contest_id=contest.contest_id) }}" class="btn btn-ghost w-100">
+                🏆 View leaderboard
+            </a>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

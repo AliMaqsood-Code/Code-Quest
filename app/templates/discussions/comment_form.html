@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block title %}Edit comment - Code Quest{% endblock %}
+
+{% block breadcrumb %}
+    <a href="{{ url_for('discussions.index') }}">Discussions</a>
+    <span>/</span>
+    <a href="{{ url_for('discussions.detail', discussion_id=discussion.discussion_id) }}">{{ discussion.title|truncate(30) }}</a>
+    <span>/</span> Edit comment
+{% endblock %}
+
+{% block content %}
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+
+        <h1 class="page-title mb-3">Edit comment</h1>
+
+        <form method="post" class="card p-4" novalidate>
+
+            {{ form.hidden_tag() }}
+
+            <div class="mb-4">
+
+                {{ form.body.label(class="form-label") }}
+
+                {{ form.body(
+                    class="form-control" ~ (" is-invalid" if form.body.errors else ""),
+                    rows=6,
+                    autofocus=true
+                ) }}
+
+                {% for error in form.body.errors %}
+                    <div class="text-danger small mt-1">{{ error }}</div>
+                {% endfor %}
+
+            </div>
+
+            <div class="d-flex gap-2">
+
+                <button type="submit" class="btn btn-primary">Save changes</button>
+
+                <a href="{{ url_for('discussions.detail', discussion_id=discussion.discussion_id) }}#comment-{{ comment.comment_id }}"
+                   class="btn btn-ghost">
+                    Cancel
+                </a>
+
+            </div>
+
+        </form>
+
+    </div>
+</div>
+
+{% endblock %}

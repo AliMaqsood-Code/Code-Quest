@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block title %}Discussions - Code Quest{% endblock %}
+
+{% block breadcrumb %}
+    <span>Code Quest /</span> Discussions
+{% endblock %}
+
+{% block content %}
+
+<!-- Header -->
+<div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+
+    <div>
+        <h1 class="page-title mb-1">Discussions</h1>
+        <div class="text-secondary small">
+            {% if problem %}
+                About
+                <a href="{{ url_for('problems.detail', slug=problem.slug) }}" class="fw-semibold">{{ problem.title }}</a>
+                ·
+                <a href="{{ url_for('discussions.index') }}" class="auth-link">Show all</a>
+            {% else %}
+                Ask questions, share approaches and help each other.
+            {% endif %}
+        </div>
+    </div>
+
+    {% if current_user %}
+        <a href="{{ url_for('discussions.create', problem=problem.slug if problem else None) }}" class="btn btn-primary">
+            + New discussion
+        </a>
+    {% else %}
+        <a href="{{ url_for('auth.login') }}" class="btn btn-ghost">Sign in to post</a>
+    {% endif %}
+
+</div>
+
+
+<div class="card">
+
+    {% for d in discussions %}
+
+        <div class="d-flex align-items-start justify-content-between gap-3 px-3 py-3 {% if not loop.first %}border-top{% endif %}">
+
+            <div class="min-w-0">
+
+                <a href="{{ url_for('discussions.detail', discussion_id=d.discussion_id) }}" class="fw-semibold">
+                    {{ d.title }}
+                </a>
+
+                {% if d.is_locked %}
+                    <span class="badge st-queued ms-1">locked</span>
+                {% endif %}
+
+                <div class="small text-secondary mt-1">
+                    {{ d.user.username }}
+                    · {{ d.created_at.strftime('%b %d, %Y') }}
+                    {% if d.problem and not problem %}
+                        ·
+                        <a href="{{ url_for('problems.detail', slug=d.problem.slug) }}">{{ d.problem.title }}</a>
+                    {% endif %}
+                </div>
+
+            </div>
+
+            <div class="text-secondary small text-nowrap">
+                💬 {{ comment_counts.get(d.discussion_id, 0) }}
+            </div>
+
+        </div>
+
+    {% else %}
+
+        <div class="text-center text-secondary py-5">
+            No discussions yet. Be the first to start one.
+        </div>
+
+    {% endfor %}
+
+</div>
+
+{% endblock %}

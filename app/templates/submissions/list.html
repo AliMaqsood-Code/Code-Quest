@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+
+{% block title %}My Submissions - Code Quest{% endblock %}
+
+{% block breadcrumb %}
+    <span>Code Quest /</span> Submissions
+{% endblock %}
+
+{% block content %}
+
+<!-- Header -->
+<div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+
+    <div>
+        <h1 class="page-title mb-1">My Submissions</h1>
+        <div class="text-secondary small">
+            {% if problem_slug %}
+                Showing submissions for
+                <b>{{ problem_slug }}</b>
+                ·
+                <a href="{{ url_for('submissions.index') }}" class="auth-link">Show all</a>
+            {% else %}
+                Your {{ submissions|length }} most recent submission{{ '' if submissions|length == 1 else 's' }}.
+            {% endif %}
+        </div>
+    </div>
+
+    <a href="{{ url_for('problems.index') }}" class="btn btn-primary">
+        Solve more problems →
+    </a>
+
+</div>
+
+
+<div class="card">
+
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Problem</th>
+                    <th>Language</th>
+                    <th>Status</th>
+                    <th>Contest</th>
+                    <th class="text-end">Submitted</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+                {% for s in submissions %}
+                    <tr>
+
+                        <td>
+                            <a href="{{ url_for('submissions.detail', submission_id=s.submission_id) }}" class="text-secondary">
+                                {{ s.submission_id }}
+                            </a>
+                        </td>
+
+                        <td>
+                            <a href="{{ url_for('submissions.detail', submission_id=s.submission_id) }}" class="fw-semibold">
+                                {{ s.problem.title }}
+                            </a>
+                        </td>
+
+                        <td class="text-secondary">
+                            {{ s.language_version.language.language_name }}
+                            {{ s.language_version.version_label }}
+                        </td>
+
+                        <td>
+                            <span class="badge st-{{ s.status }}">{{ s.status.replace('_', ' ') }}</span>
+                        </td>
+
+                        <td>
+                            {% if s.contest %}
+                                <a href="{{ url_for('contests.detail', contest_id=s.contest.contest_id) }}" class="small">
+                                    {{ s.contest.title }}
+                                </a>
+                            {% else %}
+                                <span class="text-secondary">-</span>
+                            {% endif %}
+                        </td>
+
+                        <td class="text-end text-secondary small">
+                            {{ s.submitted_at.strftime('%b %d, %Y %H:%M') }}
+                        </td>
+
+                    </tr>
+
+                {% else %}
+
+                    <tr>
+                        <td colspan="6" class="text-center text-secondary py-5">
+                            No submissions yet.
+                            <a href="{{ url_for('problems.index') }}" class="auth-link">Pick a problem to start</a>
+                        </td>
+                    </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+    </div>
+
+</div>
+
+{% endblock %}

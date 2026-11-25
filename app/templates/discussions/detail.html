@@ -1,0 +1,193 @@
+{% extends "base.html" %}
+
+{% block title %}{{ discussion.title }} - Code Quest{% endblock %}
+
+{% block breadcrumb %}
+    <a href="{{ url_for('discussions.index') }}">Discussions</a>
+    <span>/</span> {{ discussion.title|truncate(40) }}
+{% endblock %}
+
+{% block content %}
+
+{% set is_owner = current_user and current_user.user_id == discussion.user_id %}
+
+{# One comment, with its replies drawn recursively #}
+{% macro thread(c) %}
+
+    <div class="py-3 border-top" id="comment-{{ c.comment_id }}">
+
+        <div class="small text-secondary mb-1">
+            <b class="text-body">{{ c.user.username }}</b>
+            · {{ c.created_at.strftime('%b %d, %Y %H:%M') }}
+            {% if c.is_edited %}· edited{% endif %}
+        </div>
+
+        <div style="white-space: pre-wrap;">{{ c.body }}</div>
+
+        <div class="d-flex flex-wrap align-items-center gap-2 mt-2">
+
+            <!-- Reactions -->
+            {% for r in reactions %}
+
+                {% set count = reaction_counts.get(c.comment_id, {}).get(r, 0) %}
+                {% set mine = (c.comment_id, r) in my_reactions %}
+                {% set icon = {'like': '👍', 'helpful': '🙌', 'insightful': '💡'}[r] %}
+
+                {% if current_user %}
+                    <form method="post" action="{{ url_for('discussions.react', comment_id=c.comment_id) }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <input type="hidden" name="reaction_type" value="{{ r }}">
+                        <button type="submit" class="btn btn-sm {{ 'btn-primary' if mine else 'btn-ghost' }}" title="{{ r|capitalize }}">
+                            {{ icon }} {{ count if count else '' }}
+                        </button>
+                    </form>
+                {% elif count %}
+                    <span class="small text-secondary">{{ icon }} {{ count }}</span>
+                {% endif %}
+
+            {% endfor %}
+
+            <!-- Actions -->
+            {% if can_comment %}
+                <button type="button" class="btn btn-sm btn-ghost" data-bs-toggle="collapse"
+                        data-bs-target="#reply-{{ c.comment_id }}">
+                    Reply
+                </button>
+            {% endif %}
+
+            {% if current_user and current_user.user_id == c.user_id and not discussion.is_locked %}
+                <a href="{{ url_for('discussions.edit_comment', comment_id=c.comment_id) }}" class="btn btn-sm btn-ghost">Edit</a>
+            {% endif %}
+
+            {% if current_user and (current_user.user_id == c.user_id or can_moderate) %}
+                <form method="post" action="{{ url_for('discussions.delete_comment', comment_id=c.comment_id) }}"
+                      onsubmit="return confirm('Delete this comment and its replies?');">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-sm btn-ghost">Delete</button>
+                </form>
+            {% endif %}
+
+        </div>
+
+
+        <!-- Reply form -->
+        {% if can_comment %}
+            <div class="collapse mt-2" id="reply-{{ c.comment_id }}">
+                <form method="post" action="{{ url_for('discussions.add_comment', discussion_id=discussion.discussion_id) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="hidden" name="parent_comment_id" value="{{ c.comment_id }}">
+                    <textarea name="body" class="form-control mb-2" rows="2" maxlength="5000"
+                              placeholder="Write a reply..." required></textarea>
+                    <button type="submit" class="btn btn-primary btn-sm">Post reply</button>
+                </form>
+            </div>
+        {% endif %}
+
+
+        <!-- Replies -->
+        {% set replies = c.replies|sort(attribute='created_at') %}
+        {% if replies %}
+            <div class="ms-3 ps-3 mt-2" style="border-left: 2px solid var(--bd);">
+                {% for reply in replies %}
+                    {{ thread(reply) }}
+                {% endfor %}
+            </div>
+        {% endif %}
+
+    </div>
+
+{% endmacro %}
+
+
+<a href="{{ url_for('discussions.index') }}" class="small">← Back to discussions</a>
+
+<!-- Post -->
+<div class="card p-4 mt-2 mb-3">
+
+    <div class="d-flex flex-wrap align-items-start justify-content-between gap-2 mb-1">
+
+        <h1 class="page-title mb-0">{{ discussion.title }}</h1>
+
+        {% if discussion.is_locked %}
+            <span class="badge st-queued">locked</span>
+        {% endif %}
+
+    </div>
+
+    <div class="small text-secondary mb-3">
+        {{ discussion.user.username }}
+        · {{ discussion.created_at.strftime('%b %d, %Y %H:%M') }}
+        {% if discussion.problem %}
+            ·
+            <a href="{{ url_for('problems.detail', slug=discussion.problem.slug) }}">{{ discussion.problem.title }}</a>
+        {% endif %}
+    </div>
+
+    <div style="white-space: pre-wrap;">{{ discussion.body }}</div>
+
+
+    {% if current_user and (is_owner or can_moderate) %}
+
+        <div class="d-flex flex-wrap gap-2 mt-4">
+
+            {% if is_owner %}
+                <a href="{{ url_for('discussions.edit', discussion_id=discussion.discussion_id) }}" class="btn btn-ghost btn-sm">Edit</a>
+            {% endif %}
+
+            {% if can_moderate %}
+                <form method="post" action="{{ url_for('discussions.toggle_lock', discussion_id=discussion.discussion_id) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-ghost btn-sm">
+                        {{ 'Unlock' if discussion.is_locked else 'Lock' }}
+                    </button>
+                </form>
+            {% endif %}
+
+            <form method="post" action="{{ url_for('discussions.delete', discussion_id=discussion.discussion_id) }}"
+                  onsubmit="return confirm('Delete this discussion and all its comments?');">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn btn-ghost btn-sm">Delete</button>
+            </form>
+
+        </div>
+
+    {% endif %}
+
+</div>
+
+
+<!-- Comments -->
+<div class="card p-4">
+
+    <b class="mb-2">{{ discussion.comments|length }} comment{{ '' if discussion.comments|length == 1 else 's' }}</b>
+
+    {% if can_comment %}
+
+        <form method="post" action="{{ url_for('discussions.add_comment', discussion_id=discussion.discussion_id) }}" class="mt-2 mb-2">
+            {{ comment_form.hidden_tag() }}
+            {{ comment_form.body(class="form-control mb-2", rows=3, placeholder="Add a comment...") }}
+            <button type="submit" class="btn btn-primary btn-sm">Post comment</button>
+        </form>
+
+    {% elif discussion.is_locked %}
+
+        <div class="alert alert-info mt-2 mb-0">This discussion is locked. New comments are disabled.</div>
+
+    {% else %}
+
+        <div class="text-secondary small mt-2">
+            <a href="{{ url_for('auth.login') }}" class="auth-link">Sign in</a> to join the discussion.
+        </div>
+
+    {% endif %}
+
+
+    {% for c in comments %}
+        {{ thread(c) }}
+    {% else %}
+        <div class="text-center text-secondary py-4">No comments yet.</div>
+    {% endfor %}
+
+</div>
+
+{% endblock %}

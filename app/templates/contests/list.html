@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block title %}Contests - Code Quest{% endblock %}
+
+{% block breadcrumb %}
+    <span>Code Quest /</span> Contests
+{% endblock %}
+
+{% block content %}
+
+{% macro contest_card(c, phase) %}
+    <div class="col-md-6 col-xl-4">
+        <a href="{{ url_for('contests.detail', contest_id=c.contest_id) }}" class="card p-3 h-100 d-block">
+
+            <div class="d-flex align-items-start justify-content-between gap-2 mb-2">
+                <b>{{ c.title }}</b>
+                <span class="badge st-{{ phase }}">{{ phase }}</span>
+            </div>
+
+            <div class="small text-secondary mb-1">
+                Starts {{ c.starts_at.strftime('%b %d, %Y %H:%M') }} UTC
+            </div>
+
+            <div class="small text-secondary">
+                Duration {{ ((c.ends_at - c.starts_at).total_seconds() / 3600)|round(1) }} h
+            </div>
+
+        </a>
+    </div>
+{% endmacro %}
+
+
+<div class="mb-4">
+    <h1 class="page-title mb-1">Contests</h1>
+    <div class="text-secondary small">Compete against other coders. Register before a contest starts.</div>
+</div>
+
+
+{% for section, label in [('running', 'Running now'), ('upcoming', 'Upcoming'), ('ended', 'Past contests')] %}
+
+    {% set items = contests | selectattr('contest_id', 'in', phases | dictsort | selectattr('1', 'equalto', section) | map(attribute='0') | list) | list %}
+
+    {% if items %}
+
+        <h2 class="h6 mt-4 mb-3">{{ label }}</h2>
+
+        <div class="row g-3">
+            {% for c in items %}
+                {{ contest_card(c, section) }}
+            {% endfor %}
+        </div>
+
+    {% endif %}
+
+{% endfor %}
+
+
+{% if not contests %}
+    <div class="card p-5 text-center text-secondary">
+        No contests yet. Check back soon.
+    </div>
+{% endif %}
+
+{% endblock %}

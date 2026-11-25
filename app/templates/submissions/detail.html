@@ -1,0 +1,184 @@
+{% extends "base.html" %}
+
+{% block title %}Submission #{{ submission.submission_id }} - Code Quest{% endblock %}
+
+{% block breadcrumb %}
+    <a href="{{ url_for('submissions.index') }}">Submissions</a>
+    <span>/</span> #{{ submission.submission_id }}
+{% endblock %}
+
+{% block content %}
+
+<a href="{{ url_for('submissions.index') }}" class="small">← Back to submissions</a>
+
+<div class="row g-3 mt-1">
+
+    <!-- Result + code -->
+    <div class="col-lg-8">
+
+        <div class="card p-4 mb-3">
+
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-1">
+
+                <h1 class="page-title mb-0">
+                    <a href="{{ url_for('problems.detail', slug=submission.problem.slug) }}">
+                        {{ submission.problem.title }}
+                    </a>
+                </h1>
+
+                <span class="badge st-{{ submission.status }} fs-6">
+                    {{ submission.status.replace('_', ' ') }}
+                </span>
+
+            </div>
+
+            <div class="text-secondary small">
+                Submission #{{ submission.submission_id }}
+                · {{ submission.submitted_at.strftime('%b %d, %Y %H:%M') }} UTC
+            </div>
+
+            {% if submission.status == 'queued' %}
+                <div class="alert alert-info mt-3 mb-0">
+                    Your code has been saved and is waiting for review.
+                    The result will be updated within 24 hours, and you will get a notification.
+                </div>
+            {% elif submission.status == 'accepted' %}
+                <div class="alert alert-success mt-3 mb-0">
+                    Accepted. Nice work!
+                </div>
+            {% endif %}
+
+        </div>
+
+
+        <div class="card p-4">
+
+            <div class="d-flex align-items-center justify-content-between mb-2">
+
+                <b>Source code</b>
+
+                <button type="button" id="copy-code" class="btn btn-ghost btn-sm">Copy</button>
+
+            </div>
+
+            <pre class="code-block mb-0" id="source-code">{{ submission.source_code }}</pre>
+
+        </div>
+
+    </div>
+
+
+    <!-- Details -->
+    <div class="col-lg-4">
+
+        <div class="card p-3 mb-3">
+
+            <b class="mb-3">Details</b>
+
+            <div class="d-flex justify-content-between mb-2">
+                <span class="text-secondary">Language</span>
+                <span>
+                    {{ submission.language_version.language.language_name }}
+                    {{ submission.language_version.version_label }}
+                </span>
+            </div>
+
+            <div class="d-flex justify-content-between mb-2">
+                <span class="text-secondary">Difficulty</span>
+                <span class="badge diff-{{ submission.problem.difficulty }}">
+                    {{ submission.problem.difficulty|capitalize }}
+                </span>
+            </div>
+
+            {% if submission.user_id != current_user.user_id %}
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="text-secondary">Author</span>
+                    <a href="{{ url_for('profile.view', username=submission.user.username) }}">
+                        {{ submission.user.username }}
+                    </a>
+                </div>
+            {% endif %}
+
+            {% if submission.contest %}
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="text-secondary">Contest</span>
+                    <a href="{{ url_for('contests.detail', contest_id=submission.contest.contest_id) }}">
+                        {{ submission.contest.title }}
+                    </a>
+                </div>
+            {% endif %}
+
+            {% if submission.execution %}
+
+                {% if submission.execution.total_runtime_ms is not none %}
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-secondary">Runtime</span>
+                        <span>{{ submission.execution.total_runtime_ms }} ms</span>
+                    </div>
+                {% endif %}
+
+                {% if submission.execution.peak_memory_kb is not none %}
+                    <div class="d-flex justify-content-between">
+                        <span class="text-secondary">Memory</span>
+                        <span>{{ (submission.execution.peak_memory_kb / 1024)|round(1) }} MB</span>
+                    </div>
+                {% endif %}
+
+            {% endif %}
+
+        </div>
+
+
+        <div class="card p-3 mb-3">
+
+            <a href="{{ url_for('submissions.submit', slug=submission.problem.slug) }}" class="btn btn-primary w-100">
+                Submit again
+            </a>
+
+        </div>
+
+
+        <!-- Reviewers only -->
+        {% if review_form %}
+
+            <div class="card p-3">
+
+                <b class="mb-3">Set result (reviewer)</b>
+
+                <form method="post" action="{{ url_for('submissions.update_status', submission_id=submission.submission_id) }}">
+
+                    {{ review_form.hidden_tag() }}
+
+                    {{ review_form.status(class="form-select mb-2") }}
+
+                    <button type="submit" class="btn btn-primary w-100">Save result</button>
+
+                </form>
+
+            </div>
+
+        {% endif %}
+
+    </div>
+
+</div>
+
+{% endblock %}
+
+
+{% block scripts %}
+<script>
+    // Copy source code to the clipboard
+    document.getElementById("copy-code").addEventListener("click", function () {
+
+        var button = this;
+        var code = document.getElementById("source-code").textContent;
+
+        navigator.clipboard.writeText(code).then(function () {
+            button.textContent = "Copied ✓";
+            setTimeout(function () { button.textContent = "Copy"; }, 1500);
+        });
+
+    });
+</script>
+{% endblock %}
