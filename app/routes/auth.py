@@ -19,7 +19,7 @@ def safe_next(target):
     if (target and target.startswith("/")
             and not target.startswith("//") and "\\" not in target):
         return target
-    return url_for("main.index")
+    return url_for("main.dashboard")
 
 
 @auth_bp.route("/register", methods=["GET", "POST"])

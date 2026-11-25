@@ -7,6 +7,7 @@ from app import db
 from app.models import AuditLog, UserSession
 from app.models.user_models import utc_now
 from app.utils.tokenManagement import generate_token, hash_token
+from app.models import AuditLog, Notification, UserSession
 
 SESSION_DAYS = 7
 
@@ -48,7 +49,14 @@ def init_auth(app):
 
     @app.context_processor
     def inject_current_user():
-        return {"current_user": g.get("current_user")}
+        user = g.get("current_user")
+        nav_unread = 0
+        if user is not None:
+            nav_unread = Notification.query.filter(
+                Notification.user_id == user.user_id,
+                Notification.read_at.is_(None),
+            ).count()
+        return {"current_user": user, "nav_unread": nav_unread}
 
 
 def start_session(user):

@@ -57,6 +57,7 @@ def _apply_relations(problem, form):
 def index():
     difficulty = request.args.get("difficulty")
     category_id = request.args.get("category", type=int)
+    search = (request.args.get("q") or "").strip()
 
     query = Problem.query.filter_by(status="published", visibility="public")
     if difficulty in DIFFICULTIES:
@@ -65,6 +66,8 @@ def index():
         query = query.filter(
             Problem.categories.any(ProblemCategory.category_id == category_id)
         )
+    if search:
+        query = query.filter(Problem.title.ilike(f"%{search}%"))
 
     return render_template(
         "problems/list.html",
@@ -74,6 +77,7 @@ def index():
         ).all(),
         difficulty=difficulty,
         category_id=category_id,
+        search=search,
     )
 
 

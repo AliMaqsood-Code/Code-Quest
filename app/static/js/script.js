@@ -1,12 +1,8 @@
 document.addEventListener("DOMContentLoaded", function () {
 
-    // Theme management
+    // Theme management (the saved theme is applied in <head> to avoid a flash)
     const themeButton = document.getElementById("theme");
     const html = document.documentElement;
-
-    const savedTheme = localStorage.getItem("cq-theme") || "light";
-
-    html.setAttribute("data-bs-theme", savedTheme);
 
     function updateThemeIcon() {
         if (themeButton) {
@@ -66,36 +62,27 @@ document.addEventListener("DOMContentLoaded", function () {
 
         const linkPath = new URL(link.href).pathname;
 
-        if (
-            linkPath === currentPath ||
-            (linkPath !== "/" && currentPath.startsWith(linkPath))
-        ) {
+        // "/" and "/dashboard" must match exactly; other sections match by prefix
+        const exactOnly = linkPath === "/" || linkPath === "/dashboard";
+
+        const isActive = exactOnly
+            ? linkPath === currentPath
+            : currentPath.startsWith(linkPath);
+
+        if (isActive) {
             link.classList.add("active");
         }
 
     });
 
 
-    // Global search - basic Enter handling
-    const searchInput = document.getElementById("global-search");
-
-    if (searchInput) {
-
-        searchInput.addEventListener("keydown", function (event) {
-
-            if (event.key === "Enter") {
-
-                const query = searchInput.value.trim();
-
-                if (query) {
-                    window.location.href =
-                        "/problems/?search=" + encodeURIComponent(query);
-                }
-
-            }
-
+    // Auto-dismiss success / info flash messages after 5 seconds
+    document
+        .querySelectorAll(".flash-messages .alert-success, .flash-messages .alert-info")
+        .forEach(function (alertEl) {
+            setTimeout(function () {
+                bootstrap.Alert.getOrCreateInstance(alertEl).close();
+            }, 5000);
         });
-
-    }
 
 });

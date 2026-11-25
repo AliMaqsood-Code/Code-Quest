@@ -696,6 +696,59 @@ code {
     color: var(--ink);
 }
 
+/* Sidebar footer (logged-in user) */
+
+.side {
+    overflow-y: auto;
+}
+
+.side-foot {
+    margin-top: auto;
+}
+
+.side-foot .me {
+    margin-top: 0;
+}
+
+.side-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.side-actions form {
+    flex: 1;
+}
+
+.side-actions .btn {
+    flex: 1;
+    width: 100%;
+}
+
+#links a .badge::before {
+    display: none;
+}
+
+/* More status badges */
+
+.st-queued {
+    background: var(--soft);
+    color: var(--mut);
+}
+
+.st-running {
+    background: var(--ac-soft);
+    color: var(--ac);
+}
+
+.st-runtime_error,
+.st-compile_error,
+.st-time_limit_exceeded,
+.st-cancelled {
+    background: color-mix(in srgb, var(--warn) 14%, transparent);
+    color: var(--warn);
+}
+
 /* Animation */
 
 .fade-in {
