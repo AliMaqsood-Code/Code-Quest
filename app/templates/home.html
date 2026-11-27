@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="light">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Code Quest - Learn, Practice & Compete</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+    <style>
+        body {
+            min-height: 100vh;
+        }
+
+        .landing-nav {
+            height: 70px;
+            border-bottom: 1px solid var(--bd);
+            background: var(--panel);
+        }
+
+        .landing-logo {
+            font-size: 17px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .landing-hero {
+            padding: 100px 20px 85px;
+            text-align: center;
+            max-width: 850px;
+            margin: auto;
+        }
+
+        .hero-label {
+            display: inline-block;
+            padding: 7px 13px;
+            border: 1px solid var(--bd);
+            background: var(--panel);
+            border-radius: 30px;
+            font-size: 12px;
+            color: var(--mut);
+            margin-bottom: 25px;
+        }
+
+        .landing-hero h1 {
+            font-size: clamp(38px, 6vw, 64px);
+            font-weight: 800;
+            letter-spacing: -.055em;
+            line-height: 1.12;
+            margin-bottom: 22px;
+        }
+
+        .hero-highlight {
+            color: var(--ac);
+        }
+
+        .hero-description {
+            color: var(--mut);
+            font-size: 16px;
+            line-height: 1.8;
+            max-width: 620px;
+            margin: 0 auto 30px;
+        }
+
+        .hero-actions {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .hero-actions .btn {
+            padding: 11px 20px;
+        }
+
+        .hero-preview {
+            max-width: 850px;
+            margin: 0 auto 90px;
+            padding: 18px;
+            border: 1px solid var(--bd);
+            background: var(--panel);
+            border-radius: 14px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, .05);
+        }
+
+        .preview-header {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--bd);
+            margin-bottom: 18px;
+        }
+
+        .preview-dot {
+            width: 9px;
+            height: 9px;
+            border-radius: 50%;
+            background: var(--bd);
+        }
+
+        .preview-content {
+            display: grid;
+            grid-template-columns: 1fr 1.5fr;
+            gap: 16px;
+            text-align: left;
+        }
+
+        .preview-panel {
+            border: 1px solid var(--bd);
+            border-radius: 9px;
+            padding: 16px;
+            background: var(--bg);
+        }
+
+        .preview-line {
+            height: 9px;
+            background: var(--soft);
+            border-radius: 4px;
+            margin-bottom: 12px;
+        }
+
+        .preview-code {
+            font: 12px/2 "JetBrains Mono", monospace;
+            color: var(--mut);
+            white-space: pre-line;
+        }
+
+        .section {
+            padding: 70px 20px;
+        }
+
+        .section-heading {
+            text-align: center;
+            max-width: 600px;
+            margin: 0 auto 40px;
+        }
+
+        .section-heading h2 {
+            font-size: 30px;
+            font-weight: 700;
+            letter-spacing: -.035em;
+        }
+
+        .section-heading p {
+            color: var(--mut);
+            line-height: 1.7;
+            margin-top: 12px;
+        }
+
+        .feature-card {
+            height: 100%;
+            padding: 24px;
+            transition: .2s;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-3px);
+            border-color: var(--ac);
+        }
+
+        .feature-icon {
+            width: 42px;
+            height: 42px;
+            display: grid;
+            place-items: center;
+            background: var(--ac-soft);
+            color: var(--ac);
+            border-radius: 10px;
+            font-size: 19px;
+            margin-bottom: 20px;
+        }
+
+        .feature-card h5 {
+            font-size: 15px;
+            font-weight: 650;
+            margin-bottom: 10px;
+        }
+
+        .feature-card p {
+            color: var(--mut);
+            font-size: 13px;
+            line-height: 1.7;
+            margin: 0;
+        }
+
+        .cta-section {
+            padding: 65px 20px;
+            margin: 50px auto;
+            max-width: 1000px;
+            border: 1px solid var(--bd);
+            background: var(--panel);
+            border-radius: 15px;
+            text-align: center;
+        }
+
+        .cta-section h2 {
+            font-size: 30px;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+
+        .cta-section p {
+            color: var(--mut);
+            margin-bottom: 25px;
+        }
+
+        .landing-footer {
+            border-top: 1px solid var(--bd);
+            padding: 25px 20px;
+            color: var(--mut);
+            font-size: 12px;
+        }
+
+        @media (max-width: 576px) {
+            .landing-hero {
+                padding: 70px 18px;
+            }
+
+            .preview-content {
+                grid-template-columns: 1fr;
+            }
+
+            .hero-preview {
+                margin-left: 12px;
+                margin-right: 12px;
+            }
+
+            .section-heading h2 {
+                font-size: 25px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Navigation -->
+    <nav class="landing-nav">
+        <div class="container h-100 d-flex align-items-center justify-content-between">
+
+            <a href="{{ url_for('main.index') }}" class="landing-logo">
+                <span class="logo">{ }</span>
+                Code Quest
+            </a>
+
+            <div class="d-flex align-items-center gap-2">
+
+                <a href="{{ url_for('problems.index') }}" class="btn btn-ghost d-none d-sm-inline-block">
+                    Explore Problems
+                </a>
+
+                {% if current_user %}
+
+                    <a href="{{ url_for('contests.index') }}" class="btn btn-ghost d-none d-sm-inline-block">
+                        Contests
+                    </a>
+
+                    <span class="text-secondary small d-none d-md-inline">
+                        {{ current_user.username }}
+                    </span>
+
+                    <a href="{{ url_for('learning.index') }}" class="btn btn-primary">
+                        Start Learning
+                    </a>
+
+                {% else %}
+
+                    <a href="{{ url_for('auth.login') }}" class="btn btn-ghost">
+                        Login
+                    </a>
+
+                    <a href="{{ url_for('auth.register') }}" class="btn btn-primary">
+                        Get Started
+                    </a>
+
+                {% endif %}
+
+                <button id="theme" class="icon-btn" type="button" title="Toggle theme">
+                    ☾
+                </button>
+
+            </div>
+
+        </div>
+    </nav>
+
+
+    <!-- Hero -->
+    <section class="landing-hero">
+
+        <div class="hero-label">
+            &lt; Code. Learn. Compete. /&gt;
+        </div>
+
+        <h1>
+            Your Journey to Becoming a
+            <span class="hero-highlight">Better Programmer.</span>
+        </h1>
+
+        <p class="hero-description">
+            Practice coding problems, challenge yourself in programming
+            contests, explore learning paths and connect with other
+            developers. Everything you need to grow as a programmer
+            in one place.
+        </p>
+
+        <div class="hero-actions">
+
+            {% if current_user %}
+
+                <a href="{{ url_for('problems.index') }}" class="btn btn-primary">
+                    Explore Problems →
+                </a>
+
+                <a href="{{ url_for('learning.index') }}" class="btn btn-outline-primary">
+                    Explore Learning Paths
+                </a>
+
+            {% else %}
+
+                <a href="{{ url_for('auth.register') }}" class="btn btn-primary">
+                    Create Free Account →
+                </a>
+
+                <a href="{{ url_for('problems.index') }}" class="btn btn-outline-primary">
+                    Explore Problems
+                </a>
+
+            {% endif %}
+
+        </div>
+
+    </section>
+
+
+    <!-- Platform Preview -->
+    <section class="hero-preview">
+
+        <div class="preview-header">
+            <span class="preview-dot"></span>
+            <span class="preview-dot"></span>
+            <span class="preview-dot"></span>
+
+            <span class="ms-2 text-secondary small">
+                codequest / practice
+            </span>
+        </div>
+
+        <div class="preview-content">
+
+            <div class="preview-panel">
+
+                <div class="small fw-semibold mb-3">
+                    Problem of the Day
+                </div>
+
+                <div class="preview-line" style="width: 85%;"></div>
+                <div class="preview-line" style="width: 65%;"></div>
+
+                <div class="d-flex gap-2 mt-3">
+                    <span class="badge diff-easy">Easy</span>
+                    <span class="chip">Algorithms</span>
+                </div>
+
+                <div class="small text-secondary mt-3">
+                    Practice. Improve. Repeat.
+                </div>
+
+            </div>
+
+            <div class="preview-panel">
+
+                <div class="small fw-semibold mb-3">
+                    Your Code Editor
+                </div>
+
+                <div class="preview-code"><span style="color:var(--ac)">def</span> two_sum(nums, target):
+    seen = {}
+
+    <span style="color:var(--ac)">for</span> i, num <span style="color:var(--ac)">in</span> enumerate(nums):
+        complement = target - num
+
+        <span style="color:var(--ac)">if</span> complement <span style="color:var(--ac)">in</span> seen:
+            <span style="color:var(--ok)">return</span> [seen[complement], i]
+
+        seen[num] = i</div>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- Features -->
+    <section class="section">
+
+        <div class="container">
+
+            <div class="section-heading">
+
+                <span class="text-secondary small fw-semibold">
+                    WHAT YOU CAN DO
+                </span>
+
+                <h2 class="mt-2">
+                    Everything You Need to Level Up
+                </h2>
+
+                <p>
+                    Build your programming skills through practice,
+                    competition and collaboration.
+                </p>
+
+            </div>
+
+
+            <div class="row g-3">
+
+                <div class="col-md-6 col-lg-4">
+                    <div class="card feature-card">
+                        <div class="feature-icon">⌘</div>
+                        <h5>Coding Problems</h5>
+                        <p>
+                            Explore programming challenges across different
+                            difficulty levels, categories and topics.
+                        </p>
+                    </div>
+                </div>
+
+
+                <div class="col-md-6 col-lg-4">
+                    <div class="card feature-card">
+                        <div class="feature-icon">🏆</div>
+                        <h5>Programming Contests</h5>
+                        <p>
+                            Participate in coding competitions, solve
+                            contest problems and track leaderboard rankings.
+                        </p>
+                    </div>
+                </div>
+
+
+                <div class="col-md-6 col-lg-4">
+                    <div class="card feature-card">
+                        <div class="feature-icon">▣</div>
+                        <h5>Learning Paths</h5>
+                        <p>
+                            Follow structured learning paths and track
+                            your progress through individual steps.
+                        </p>
+                    </div>
+                </div>
+
+
+                <div class="col-md-6 col-lg-4">
+                    <div class="card feature-card">
+                        <div class="feature-icon">☷</div>
+                        <h5>Developer Community</h5>
+                        <p>
+                            Share ideas, participate in discussions
+                            and interact with other programmers.
+                        </p>
+                    </div>
+                </div>
+
+
+                <div class="col-md-6 col-lg-4">
+                    <div class="card feature-card">
+                        <div class="feature-icon">♧</div>
+                        <h5>Teams & Groups</h5>
+                        <p>
+                            Create teams, join groups and collaborate
+                            with other members.
+                        </p>
+                    </div>
+                </div>
+
+
+                <div class="col-md-6 col-lg-4">
+                    <div class="card feature-card">
+                        <div class="feature-icon">✦</div>
+                        <h5>Achievements</h5>
+                        <p>
+                            Earn points, unlock achievements and
+                            keep track of your programming activity.
+                        </p>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- Call to Action -->
+    <section class="container">
+
+        <div class="cta-section">
+
+            <h2>Ready to Start Your Coding Journey?</h2>
+
+            <p>
+                Join Code Quest and take the next step in your
+                programming journey.
+            </p>
+
+            {% if current_user %}
+
+                <a href="{{ url_for('problems.index') }}" class="btn btn-primary px-4 py-2">
+                    Start Practicing →
+                </a>
+
+            {% else %}
+
+                <a href="{{ url_for('auth.register') }}" class="btn btn-primary px-4 py-2">
+                    Create Your Account →
+                </a>
+
+            {% endif %}
+
+        </div>
+
+    </section>
+
+
+    <!-- Footer -->
+    <footer class="landing-footer">
+
+        <div class="container d-flex flex-wrap justify-content-between gap-2">
+
+            <span>
+                <strong>Code Quest</strong> — Learn. Practice. Compete.
+            </span>
+
+            <span>
+                © 2026 Code Quest. All rights reserved.
+            </span>
+
+        </div>
+
+    </footer>
+
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+
+</body>
+</html>

@@ -1,0 +1,211 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Code Quest{% endblock %}
+
+{% block breadcrumb %}
+    <span>Code Quest /</span> Dashboard
+{% endblock %}
+
+{% block content %}
+
+{% set pct = ((solved / total_problems) * 100) | round | int if total_problems else 0 %}
+
+<!-- Header -->
+<div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-4">
+
+    <div>
+        <h1 class="page-title mb-1">Welcome back, {{ current_user.username }}</h1>
+        <div class="text-secondary">Here's where you stand today.</div>
+    </div>
+
+    <a href="{{ url_for('problems.index') }}" class="btn btn-primary">
+        Browse problems →
+    </a>
+
+</div>
+
+
+<!-- Stat cards -->
+<div class="row g-3 mb-4">
+
+    <div class="col-6 col-lg-3">
+        <div class="card kpi p-3 h-100">
+            <div class="lbl">Problems solved</div>
+            <div class="v">{{ solved }}<span class="text-secondary fs-6"> / {{ total_problems }}</span></div>
+        </div>
+    </div>
+
+    <div class="col-6 col-lg-3">
+        <div class="card kpi p-3 h-100">
+            <div class="lbl">Points</div>
+            <div class="v">{{ points }}</div>
+        </div>
+    </div>
+
+    <div class="col-6 col-lg-3">
+        <div class="card kpi p-3 h-100">
+            <div class="lbl">Submissions</div>
+            <div class="v">{{ total_submissions }}</div>
+        </div>
+    </div>
+
+    <div class="col-6 col-lg-3">
+        <div class="card kpi p-3 h-100">
+            <div class="lbl">Awaiting review</div>
+            <div class="v">{{ pending }}</div>
+        </div>
+    </div>
+
+</div>
+
+
+<div class="row g-3">
+
+    <!-- Left column -->
+    <div class="col-lg-8">
+
+        <!-- Recent submissions -->
+        <div class="card mb-3">
+
+            <div class="d-flex align-items-center justify-content-between p-3 pb-2">
+                <b>Recent submissions</b>
+                <a href="{{ url_for('submissions.index') }}" class="small text-secondary">View all →</a>
+            </div>
+
+            {% if recent_submissions %}
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead>
+                            <tr>
+                                <th>Problem</th>
+                                <th>Language</th>
+                                <th>Status</th>
+                                <th class="text-end">Submitted</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for s in recent_submissions %}
+                                <tr>
+                                    <td>
+                                        <a href="{{ url_for('submissions.detail', submission_id=s.submission_id) }}" class="fw-semibold">
+                                            {{ s.problem.title }}
+                                        </a>
+                                    </td>
+                                    <td class="text-secondary">
+                                        {{ s.language_version.language.language_name }}
+                                    </td>
+                                    <td>
+                                        <span class="badge st-{{ s.status }}">{{ s.status.replace('_', ' ') }}</span>
+                                    </td>
+                                    <td class="text-end text-secondary">
+                                        {{ s.submitted_at.strftime('%b %d, %H:%M') }}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="text-center text-secondary p-4">
+                    No submissions yet.
+                    <a href="{{ url_for('problems.index') }}" class="auth-link">Solve your first problem</a>
+                </div>
+            {% endif %}
+
+        </div>
+
+
+        <!-- Contests -->
+        <div class="card">
+
+            <div class="d-flex align-items-center justify-content-between p-3 pb-2">
+                <b>Upcoming contests</b>
+                <a href="{{ url_for('contests.index') }}" class="small text-secondary">All contests →</a>
+            </div>
+
+            {% if contests %}
+                <div class="list-group list-group-flush">
+                    {% for c in contests %}
+                        <a href="{{ url_for('contests.detail', contest_id=c.contest_id) }}"
+                           class="d-flex align-items-center justify-content-between gap-3 px-3 py-2 border-top">
+                            <div>
+                                <div class="fw-semibold">{{ c.title }}</div>
+                                <div class="small text-secondary">
+                                    Starts {{ c.starts_at.strftime('%b %d, %H:%M') }} UTC
+                                </div>
+                            </div>
+                            <span class="badge st-{{ phases[c.contest_id] }}">{{ phases[c.contest_id] }}</span>
+                        </a>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="text-center text-secondary p-4 border-top">
+                    No running or upcoming contests right now.
+                </div>
+            {% endif %}
+
+        </div>
+
+    </div>
+
+
+    <!-- Right column -->
+    <div class="col-lg-4">
+
+        <!-- Progress -->
+        <div class="card p-3 mb-3">
+
+            <b class="mb-3">Your progress</b>
+
+            <div class="d-flex justify-content-between small mb-1">
+                <span class="text-secondary">Overall</span>
+                <span>{{ pct }}%</span>
+            </div>
+            <div class="progress mb-4">
+                <div class="progress-bar" style="width: {{ pct }}%"></div>
+            </div>
+
+            {% for level in ['easy', 'medium', 'hard'] %}
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <span class="badge diff-{{ level }}">{{ level|capitalize }}</span>
+                    <b>{{ by_difficulty.get(level, 0) }}</b>
+                </div>
+            {% endfor %}
+
+        </div>
+
+
+        <!-- Notifications -->
+        <div class="card">
+
+            <div class="d-flex align-items-center justify-content-between p-3 pb-2">
+                <b>Unread notifications</b>
+                <a href="{{ url_for('notifications.index') }}" class="small text-secondary">View all →</a>
+            </div>
+
+            {% if unread %}
+                {% for n in unread %}
+                    <div class="px-3 py-2 border-top unread">
+                        <div class="fw-semibold small">
+                            {% if n.related_url %}
+                                <a href="{{ n.related_url }}">{{ n.title }}</a>
+                            {% else %}
+                                {{ n.title }}
+                            {% endif %}
+                        </div>
+                        <div class="small text-secondary">{{ n.message|truncate(80) }}</div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <div class="text-center text-secondary p-4 border-top">
+                    You're all caught up.
+                </div>
+            {% endif %}
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

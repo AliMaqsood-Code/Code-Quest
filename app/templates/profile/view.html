@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+
+{% set shown_name = profile.display_name if profile else profile_user.username %}
+
+{% block title %}{{ shown_name }} (@{{ profile_user.username }}) - Code Quest{% endblock %}
+
+{% block breadcrumb %}
+    <span>Code Quest /</span> Profile
+{% endblock %}
+
+{% block content %}
+
+<div class="row g-3">
+
+    <!-- Profile card -->
+    <div class="col-lg-4">
+
+        <div class="card p-4 text-center">
+
+            {% if profile and profile.avatar_url %}
+                <img src="{{ profile.avatar_url }}" alt="{{ profile_user.username }}" referrerpolicy="no-referrer"
+                     class="mx-auto mb-3"
+                     style="width: 96px; height: 96px; border-radius: 50%; object-fit: cover;">
+            {% else %}
+                <div class="av mx-auto mb-3"
+                     style="width: 96px; height: 96px; font-size: 38px; display: grid; place-items: center;">
+                    {{ profile_user.username[0]|upper }}
+                </div>
+            {% endif %}
+
+            <h1 class="h4 mb-0">{{ shown_name }}</h1>
+            <div class="text-secondary mb-2">@{{ profile_user.username }}</div>
+
+            {% if profile and profile.country %}
+                <div class="small text-secondary mb-2">📍 {{ profile.country }}</div>
+            {% endif %}
+
+            <div class="small text-secondary mb-3">
+                Joined {{ profile_user.created_at.strftime('%b %Y') }}
+            </div>
+
+            <div class="d-flex justify-content-center gap-4 mb-3">
+                <div>
+                    <b>{{ followers|length }}</b>
+                    <div class="small text-secondary">Followers</div>
+                </div>
+                <div>
+                    <b>{{ following|length }}</b>
+                    <div class="small text-secondary">Following</div>
+                </div>
+            </div>
+
+            {% if is_me %}
+
+                <a href="{{ url_for('profile.edit') }}" class="btn btn-primary w-100">Edit profile</a>
+
+            {% elif current_user %}
+
+                {% if is_following %}
+                    <form method="post" action="{{ url_for('profile.unfollow', username=profile_user.username) }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn btn-ghost w-100">Following ✓ · Unfollow</button>
+                    </form>
+                {% else %}
+                    <form method="post" action="{{ url_for('profile.follow', username=profile_user.username) }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn btn-primary w-100">Follow</button>
+                    </form>
+                {% endif %}
+
+            {% else %}
+
+                <a href="{{ url_for('auth.login') }}" class="btn btn-ghost w-100">Sign in to follow</a>
+
+            {% endif %}
+
+        </div>
+
+    </div>
+
+
+    <!-- Details -->
+    <div class="col-lg-8">
+
+        <!-- About -->
+        <div class="card p-4 mb-3">
+
+            <b class="mb-2">About</b>
+
+            {% if profile and profile.bio %}
+                <div style="white-space: pre-wrap;">{{ profile.bio }}</div>
+            {% else %}
+                <div class="text-secondary">
+                    {{ 'You have not written a bio yet.' if is_me else 'This user has not written a bio yet.' }}
+                </div>
+            {% endif %}
+
+        </div>
+
+
+        <!-- Links -->
+        <div class="card p-4 mb-3">
+
+            <b class="mb-2">Links</b>
+
+            {% if (profile and profile.github_url) or links %}
+
+                <div class="d-flex flex-column gap-2">
+
+                    {% if profile and profile.github_url %}
+                        <a href="{{ profile.github_url }}" target="_blank" rel="noopener noreferrer nofollow">
+                            GitHub
+                        </a>
+                    {% endif %}
+
+                    {% for l in links %}
+                        <a href="{{ l.url }}" target="_blank" rel="noopener noreferrer nofollow">
+                            {{ l.label }}
+                        </a>
+                    {% endfor %}
+
+                </div>
+
+            {% else %}
+
+                <div class="text-secondary">No links added.</div>
+
+            {% endif %}
+
+        </div>
+
+
+        <!-- Followers / following -->
+        <div class="row g-3">
+
+            <div class="col-md-6">
+                <div class="card p-4 h-100">
+                    <b class="mb-2">Followers</b>
+                    {% for u in followers[:20] %}
+                        <a href="{{ url_for('profile.view', username=u.username) }}" class="py-1">{{ u.username }}</a>
+                    {% else %}
+                        <div class="small text-secondary">No followers yet.</div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="card p-4 h-100">
+                    <b class="mb-2">Following</b>
+                    {% for u in following[:20] %}
+                        <a href="{{ url_for('profile.view', username=u.username) }}" class="py-1">{{ u.username }}</a>
+                    {% else %}
+                        <div class="small text-secondary">Not following anyone yet.</div>
+                    {% endfor %}
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block title %}Invite code - {{ group.group_name }} - Code Quest{% endblock %}
+
+{% block breadcrumb %}
+    <a href="{{ url_for('groups.index') }}">Groups</a>
+    <span>/</span>
+    <a href="{{ url_for('groups.detail', group_id=group.group_id) }}">{{ group.group_name }}</a>
+    <span>/</span> Invite code
+{% endblock %}
+
+{% block content %}
+
+<div class="row justify-content-center">
+    <div class="col-lg-7">
+
+        <h1 class="page-title mb-3">Invite code for {{ group.group_name }}</h1>
+
+        <div class="alert alert-warning">
+            Copy this code now. It will not be shown again. If you lose it, generate a new one.
+        </div>
+
+        <div class="card p-4">
+
+            <label class="form-label" for="invite-code">Invite code</label>
+
+            <div class="d-flex gap-2 mb-3">
+
+                <input type="text" id="invite-code" class="form-control" value="{{ code }}" readonly>
+
+                <button type="button" id="copy-code" class="btn btn-primary">Copy</button>
+
+            </div>
+
+            <div class="small text-secondary mb-4">
+                Share it with the people you want to add. They can join from the
+                <b>Join with code</b> button on the Groups page.
+                Generating a new code replaces this one.
+            </div>
+
+            <a href="{{ url_for('groups.detail', group_id=group.group_id) }}" class="btn btn-ghost">
+                Back to group
+            </a>
+
+        </div>
+
+    </div>
+</div>
+
+{% endblock %}
+
+
+{% block scripts %}
+<script>
+    document.getElementById("copy-code").addEventListener("click", function () {
+
+        var button = this;
+        var input = document.getElementById("invite-code");
+
+        navigator.clipboard.writeText(input.value).then(function () {
+            button.textContent = "Copied ✓";
+            setTimeout(function () { button.textContent = "Copy"; }, 1500);
+        });
+
+    });
+</script>
+{% endblock %}

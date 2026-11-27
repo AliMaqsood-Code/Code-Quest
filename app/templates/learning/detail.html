@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+
+{% block title %}{{ path.title }} - Code Quest{% endblock %}
+
+{% block breadcrumb %}
+    <a href="{{ url_for('learning.index') }}">Learning Paths</a>
+    <span>/</span> {{ path.title }}
+{% endblock %}
+
+{% block content %}
+
+{% set pct = ((completed / total) * 100) | round | int if total else 0 %}
+
+<a href="{{ url_for('learning.index') }}" class="small">← Back to learning paths</a>
+
+<!-- Overview -->
+<div class="card p-4 mt-2 mb-3">
+
+    <div class="d-flex flex-wrap align-items-start justify-content-between gap-2 mb-2">
+
+        <h1 class="page-title mb-0">{{ path.title }}</h1>
+
+        <div>
+            {% if not path.is_published %}
+                <span class="badge st-queued">draft</span>
+            {% endif %}
+            {% if path.difficulty %}
+                <span class="badge diff-{{ path.difficulty }}">{{ path.difficulty|capitalize }}</span>
+            {% endif %}
+        </div>
+
+    </div>
+
+    {% if path.description %}
+        <div class="mb-3" style="white-space: pre-wrap;">{{ path.description }}</div>
+    {% endif %}
+
+    {% if current_user %}
+
+        <div class="d-flex justify-content-between small mb-1">
+            <span class="text-secondary">Your progress</span>
+            <span>{{ completed }} / {{ total }} steps · {{ pct }}%</span>
+        </div>
+
+        <div class="progress">
+            <div class="progress-bar" style="width: {{ pct }}%"></div>
+        </div>
+
+    {% else %}
+
+        <div class="small text-secondary">
+            <a href="{{ url_for('auth.login') }}" class="auth-link">Sign in</a> to track your progress.
+        </div>
+
+    {% endif %}
+
+</div>
+
+
+<!-- Steps -->
+{% for step in steps %}
+
+    {% set row = progress.get(step.step_id) %}
+    {% set status = row.status if row else 'not_started' %}
+
+    <div class="card p-4 mb-3">
+
+        <div class="d-flex align-items-start justify-content-between gap-3">
+
+            <div>
+
+                <div class="small text-secondary mb-1">Step {{ step.sequence_no }}</div>
+
+                <h2 class="h5 mb-2">
+                    {% if status == 'completed' %}<span class="text-success">✓</span>{% endif %}
+                    {{ step.step_title }}
+                </h2>
+
+            </div>
+
+            {% if current_user %}
+                <span class="badge st-{{ 'accepted' if status == 'completed' else ('running' if status == 'in_progress' else 'queued') }} text-nowrap">
+                    {{ status.replace('_', ' ') }}
+                </span>
+            {% endif %}
+
+        </div>
+
+        {% if step.instructions %}
+            <div class="mb-3" style="white-space: pre-wrap;">{{ step.instructions }}</div>
+        {% endif %}
+
+
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+
+            <!-- Linked problem -->
+            <div>
+                {% if step.problem and step.problem_id in open_problem_ids %}
+                    <a href="{{ url_for('problems.detail', slug=step.problem.slug) }}" class="btn btn-primary btn-sm">
+                        Solve: {{ step.problem.title }} →
+                    </a>
+                {% elif step.problem %}
+                    <span class="small text-secondary">The linked problem is not available right now.</span>
+                {% endif %}
+            </div>
+
+            <!-- Progress buttons -->
+            {% if current_user %}
+                <form method="post" action="{{ url_for('learning.set_progress', step_id=step.step_id) }}" class="d-flex gap-1">
+
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                    {% for s in progress_statuses %}
+                        <button
+                            type="submit"
+                            name="status"
+                            value="{{ s }}"
+                            class="btn btn-sm {{ 'btn-primary' if s == status else 'btn-ghost' }}"
+                        >
+                            {{ s.replace('_', ' ')|capitalize }}
+                        </button>
+                    {% endfor %}
+
+                </form>
+            {% endif %}
+
+        </div>
+
+    </div>
+
+{% else %}
+
+    <div class="card p-5 text-center text-secondary">
+        This path has no steps yet.
+    </div>
+
+{% endfor %}
+
+{% endblock %}

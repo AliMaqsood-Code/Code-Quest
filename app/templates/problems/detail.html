@@ -1,0 +1,172 @@
+{% extends "base.html" %}
+
+{% block title %}{{ problem.title }} - Code Quest{% endblock %}
+
+{% block breadcrumb %}
+    <a href="{{ url_for('problems.index') }}">Problems</a>
+    <span>/</span> {{ problem.title }}
+{% endblock %}
+
+{% block content %}
+
+<a href="{{ url_for('problems.index') }}" class="small">← Back to problems</a>
+
+<div class="row g-3 mt-1">
+
+    <!-- Problem statement -->
+    <div class="col-lg-8">
+
+        <div class="card p-4">
+
+            <div class="d-flex flex-wrap align-items-start justify-content-between gap-2 mb-2">
+
+                <h1 class="page-title mb-0">{{ problem.title }}</h1>
+
+                <span class="badge diff-{{ problem.difficulty }}">
+                    {{ problem.difficulty|capitalize }}
+                </span>
+
+            </div>
+
+            <div class="mb-3">
+                {% for c in problem.categories %}
+                    <span class="chip">{{ c.category_name }}</span>
+                {% endfor %}
+                {% for t in problem.tags %}
+                    <span class="chip">#{{ t.tag_name }}</span>
+                {% endfor %}
+            </div>
+
+            <div class="mb-4" style="white-space: pre-wrap;">{{ problem.statement }}</div>
+
+
+            <!-- Examples -->
+            {% if examples %}
+
+                <h2 class="h6 mb-3">Examples</h2>
+
+                {% for e in examples %}
+
+                    <div class="mb-3">
+
+                        <strong class="small">Example {{ loop.index }}</strong>
+
+<pre class="code-block mb-1">Input:
+{{ e.input_text }}
+
+Output:
+{{ e.output_text }}</pre>
+
+                        {% if e.explanation %}
+                            <div class="small text-secondary">{{ e.explanation }}</div>
+                        {% endif %}
+
+                    </div>
+
+                {% endfor %}
+
+            {% endif %}
+
+
+            <!-- Hints -->
+            {% if hints %}
+
+                <h2 class="h6 mt-4 mb-2">Hints</h2>
+
+                <div class="accordion accordion-flush" id="hints">
+
+                    {% for h in hints %}
+
+                        <div class="accordion-item bg-transparent">
+
+                            <h3 class="accordion-header">
+                                <button
+                                    class="accordion-button collapsed bg-transparent shadow-none py-2"
+                                    type="button"
+                                    data-bs-toggle="collapse"
+                                    data-bs-target="#hint-{{ loop.index }}"
+                                >
+                                    Hint {{ loop.index }}
+                                </button>
+                            </h3>
+
+                            <div id="hint-{{ loop.index }}" class="accordion-collapse collapse" data-bs-parent="#hints">
+                                <div class="accordion-body small pt-0" style="white-space: pre-wrap;">{{ h.hint_text }}</div>
+                            </div>
+
+                        </div>
+
+                    {% endfor %}
+
+                </div>
+
+            {% endif %}
+
+        </div>
+
+    </div>
+
+
+    <!-- Side panel -->
+    <div class="col-lg-4">
+
+        <div class="card p-3 mb-3">
+
+            <a href="{{ url_for('submissions.submit', slug=problem.slug) }}" class="btn btn-primary w-100 mb-2">
+                Submit solution →
+            </a>
+
+            <a href="{{ url_for('solutions.index', slug=problem.slug) }}" class="btn btn-ghost w-100 mb-2">
+                Solutions
+            </a>
+
+            <a href="{{ url_for('discussions.index', problem=problem.slug) }}" class="btn btn-ghost w-100 mb-2">
+                Discussions
+            </a>
+
+            {% if current_user %}
+
+                <a href="{{ url_for('submissions.index', problem=problem.slug) }}" class="btn btn-ghost w-100 mb-2">
+                    My submissions
+                </a>
+
+                <form method="post" action="{{ url_for('problems.toggle_bookmark', slug=problem.slug) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-ghost w-100">
+                        {{ '★ Bookmarked' if bookmarked else '☆ Bookmark' }}
+                    </button>
+                </form>
+
+            {% else %}
+
+                <div class="small text-secondary text-center mt-1">
+                    <a href="{{ url_for('auth.login') }}" class="auth-link">Sign in</a>
+                    to submit and bookmark.
+                </div>
+
+            {% endif %}
+
+        </div>
+
+
+        <div class="card p-3">
+
+            <b class="mb-3">Limits</b>
+
+            <div class="d-flex justify-content-between mb-2">
+                <span class="text-secondary">Time limit</span>
+                <span>{{ problem.time_limit_ms }} ms</span>
+            </div>
+
+            <div class="d-flex justify-content-between">
+                <span class="text-secondary">Memory limit</span>
+                <span>{{ problem.memory_limit_mb }} MB</span>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block title %}Join a group - Code Quest{% endblock %}
+
+{% block breadcrumb %}
+    <a href="{{ url_for('groups.index') }}">Groups</a>
+    <span>/</span> Join
+{% endblock %}
+
+{% block content %}
+
+<div class="row justify-content-center">
+    <div class="col-lg-6">
+
+        <h1 class="page-title mb-1">Join a group</h1>
+        <div class="text-secondary small mb-3">Enter the invite code the group owner shared with you.</div>
+
+        <form method="post" class="card p-4" novalidate>
+
+            {{ form.hidden_tag() }}
+
+            <div class="mb-4">
+
+                {{ form.code.label(class="form-label") }}
+
+                {{ form.code(
+                    class="form-control" ~ (" is-invalid" if form.code.errors else ""),
+                    placeholder="Paste the invite code",
+                    autocomplete="off",
+                    autofocus=true
+                ) }}
+
+                {% for error in form.code.errors %}
+                    <div class="text-danger small mt-1">{{ error }}</div>
+                {% endfor %}
+
+            </div>
+
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary">Join group</button>
+                <a href="{{ url_for('groups.index') }}" class="btn btn-ghost">Cancel</a>
+            </div>
+
+        </form>
+
+    </div>
+</div>
+
+{% endblock %}

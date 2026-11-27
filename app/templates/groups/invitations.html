@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block title %}Group invitations - Code Quest{% endblock %}
+
+{% block breadcrumb %}
+    <a href="{{ url_for('groups.index') }}">Groups</a>
+    <span>/</span> Invitations
+{% endblock %}
+
+{% block content %}
+
+<a href="{{ url_for('groups.index') }}" class="small">← Back to groups</a>
+
+<h1 class="page-title mt-2 mb-3">Group invitations</h1>
+
+<div class="card">
+
+    {% for i in invitations %}
+
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 px-3 py-3 {% if not loop.first %}border-top{% endif %}">
+
+            <div>
+                <div class="fw-semibold">{{ i.group.group_name }}</div>
+                <div class="small text-secondary">
+                    Invited by {{ i.inviter.username }} · {{ i.created_at.strftime('%b %d, %Y') }}
+                </div>
+            </div>
+
+            <div class="d-flex gap-2">
+
+                <form method="post" action="{{ url_for('groups.accept_invitation', invitation_id=i.group_invitation_id) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-primary btn-sm">Accept</button>
+                </form>
+
+                <form method="post" action="{{ url_for('groups.decline_invitation', invitation_id=i.group_invitation_id) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-ghost btn-sm">Decline</button>
+                </form>
+
+            </div>
+
+        </div>
+
+    {% else %}
+
+        <div class="text-center text-secondary py-5">
+            You have no pending invitations.
+        </div>
+
+    {% endfor %}
+
+</div>
+
+{% endblock %}

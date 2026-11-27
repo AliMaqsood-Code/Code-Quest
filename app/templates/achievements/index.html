@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+
+{% block title %}Achievements - Code Quest{% endblock %}
+
+{% block breadcrumb %}
+    <span>Code Quest /</span> Achievements
+{% endblock %}
+
+{% block content %}
+
+<!-- Header -->
+<div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-4">
+
+    <div>
+        <h1 class="page-title mb-1">Achievements</h1>
+        <div class="text-secondary small">
+            {{ earned|length }} of {{ achievements|length }} unlocked
+        </div>
+    </div>
+
+    <div class="card kpi px-4 py-2 text-center">
+        <div class="lbl">Total points</div>
+        <div class="v">{{ total_points }}</div>
+    </div>
+
+</div>
+
+
+<!-- Achievement cards -->
+<div class="row g-3 mb-4">
+
+    {% for a in achievements %}
+
+        {% set got = earned.get(a.achievement_id) %}
+
+        <div class="col-md-6 col-xl-4">
+
+            <div class="card p-3 h-100" {% if not got %}style="opacity: .6;"{% endif %}>
+
+                <div class="d-flex align-items-start justify-content-between gap-2 mb-2">
+
+                    <b>{{ '🏆' if got else '🔒' }} {{ a.achievement_name }}</b>
+
+                    <span class="badge {{ 'st-accepted' if got else 'st-queued' }} text-nowrap">
+                        +{{ a.points_reward }} pts
+                    </span>
+
+                </div>
+
+                <div class="small text-secondary mb-2">{{ a.description }}</div>
+
+                <div class="small mt-auto {{ 'text-success' if got else 'text-secondary' }}">
+                    {% if got %}
+                        Earned {{ got.earned_at.strftime('%b %d, %Y') }}
+                    {% else %}
+                        Not unlocked yet
+                    {% endif %}
+                </div>
+
+            </div>
+
+        </div>
+
+    {% else %}
+
+        <div class="col-12">
+            <div class="card p-5 text-center text-secondary">
+                No achievements have been defined yet.
+            </div>
+        </div>
+
+    {% endfor %}
+
+</div>
+
+
+<!-- Points history -->
+<div class="card">
+
+    <div class="p-3 pb-2"><b>Points history</b></div>
+
+    <div class="table-responsive">
+        <table class="table align-middle mb-0">
+
+            <thead>
+                <tr>
+                    <th>Reason</th>
+                    <th class="text-end">Points</th>
+                    <th class="text-end">Date</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for h in history %}
+                    <tr>
+
+                        <td>{{ h.reason.replace('_', ' ')|capitalize }}</td>
+
+                        <td class="text-end fw-semibold {{ 'text-success' if h.points_delta > 0 else 'text-danger' }}">
+                            {{ '+' if h.points_delta > 0 }}{{ h.points_delta }}
+                        </td>
+
+                        <td class="text-end text-secondary small">
+                            {{ h.created_at.strftime('%b %d, %Y %H:%M') }}
+                        </td>
+
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="3" class="text-center text-secondary py-4">
+                            No points yet. Solve a problem to earn some.
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+
+        </table>
+    </div>
+
+</div>
+
+{% endblock %}

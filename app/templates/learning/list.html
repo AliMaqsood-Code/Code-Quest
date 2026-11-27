@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+
+{% block title %}Learning Paths - Code Quest{% endblock %}
+
+{% block breadcrumb %}
+    <span>Code Quest /</span> Learning Paths
+{% endblock %}
+
+{% block content %}
+
+<div class="mb-4">
+    <h1 class="page-title mb-1">Learning Paths</h1>
+    <div class="text-secondary small">Follow a guided sequence of problems to build a skill step by step.</div>
+</div>
+
+
+<div class="row g-3">
+
+    {% for p in paths %}
+
+        {% set total = step_counts.get(p.learning_path_id, 0) %}
+        {% set done = completed_counts.get(p.learning_path_id, 0) %}
+        {% set pct = ((done / total) * 100) | round | int if total else 0 %}
+
+        <div class="col-md-6 col-xl-4">
+
+            <a href="{{ url_for('learning.detail', path_id=p.learning_path_id) }}" class="card p-3 h-100 d-block">
+
+                <div class="d-flex align-items-start justify-content-between gap-2 mb-2">
+
+                    <b>{{ p.title }}</b>
+
+                    <div class="text-nowrap">
+                        {% if not p.is_published %}
+                            <span class="badge st-queued">draft</span>
+                        {% endif %}
+                        {% if p.difficulty %}
+                            <span class="badge diff-{{ p.difficulty }}">{{ p.difficulty|capitalize }}</span>
+                        {% endif %}
+                    </div>
+
+                </div>
+
+                <div class="small text-secondary mb-3">
+                    {{ (p.description or 'No description yet.')|truncate(110) }}
+                </div>
+
+                <div class="mt-auto">
+
+                    <div class="d-flex justify-content-between small text-secondary mb-1">
+                        <span>{{ total }} step{{ '' if total == 1 else 's' }}</span>
+                        {% if current_user %}
+                            <span>{{ done }} / {{ total }} done</span>
+                        {% endif %}
+                    </div>
+
+                    {% if current_user %}
+                        <div class="progress">
+                            <div class="progress-bar" style="width: {{ pct }}%"></div>
+                        </div>
+                    {% endif %}
+
+                </div>
+
+            </a>
+
+        </div>
+
+    {% else %}
+
+        <div class="col-12">
+            <div class="card p-5 text-center text-secondary">
+                No learning paths available yet.
+            </div>
+        </div>
+
+    {% endfor %}
+
+</div>
+
+{% endblock %}

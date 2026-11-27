@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+
+{% block title %}Problems - Code Quest{% endblock %}
+
+{% block breadcrumb %}
+    <span>Code Quest /</span> Problems
+{% endblock %}
+
+{% block content %}
+
+<!-- Header -->
+<div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+
+    <div>
+        <h1 class="page-title mb-1">Problems</h1>
+        <div class="text-secondary small">
+            {{ problems|length }} problem{{ '' if problems|length == 1 else 's' }}
+            {% if search or difficulty or category_id %}matching your filters{% endif %}
+        </div>
+    </div>
+
+    {% if current_user %}
+        <a href="{{ url_for('problems.bookmarks') }}" class="btn btn-ghost">
+            ☆ Bookmarked
+        </a>
+    {% endif %}
+
+</div>
+
+
+<div class="card p-3">
+
+    <!-- Filters -->
+    <form method="get" id="filters" class="row g-2 mb-3">
+
+        <div class="col-md-5">
+            <input
+                type="text"
+                name="q"
+                value="{{ search or '' }}"
+                class="form-control"
+                placeholder="Search by title..."
+                aria-label="Search problems"
+            >
+        </div>
+
+        <div class="col-6 col-md-3">
+            <select name="difficulty" class="form-select" aria-label="Difficulty" data-autosubmit>
+                <option value="">All difficulties</option>
+                {% for d in ['easy', 'medium', 'hard'] %}
+                    <option value="{{ d }}" {% if difficulty == d %}selected{% endif %}>
+                        {{ d|capitalize }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="col-6 col-md-2">
+            <select name="category" class="form-select" aria-label="Category" data-autosubmit>
+                <option value="">All categories</option>
+                {% for c in categories %}
+                    <option value="{{ c.category_id }}" {% if category_id == c.category_id %}selected{% endif %}>
+                        {{ c.category_name }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="col-md-2 d-flex gap-2">
+            <button type="submit" class="btn btn-primary flex-fill">Search</button>
+
+            {% if search or difficulty or category_id %}
+                <a href="{{ url_for('problems.index') }}" class="btn btn-ghost" title="Clear filters">✕</a>
+            {% endif %}
+        </div>
+
+    </form>
+
+
+    <!-- Problems table -->
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Categories</th>
+                    <th>Difficulty</th>
+                    <th class="text-end">Limits</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+                {% for p in problems %}
+                    <tr>
+
+                        <td>
+                            <a href="{{ url_for('problems.detail', slug=p.slug) }}" class="fw-semibold">
+                                {{ p.title }}
+                            </a>
+                        </td>
+
+                        <td>
+                            {% for c in p.categories %}
+                                <span class="chip">{{ c.category_name }}</span>
+                            {% else %}
+                                <span class="text-secondary">-</span>
+                            {% endfor %}
+                        </td>
+
+                        <td>
+                            <span class="badge diff-{{ p.difficulty }}">{{ p.difficulty|capitalize }}</span>
+                        </td>
+
+                        <td class="text-end text-secondary small">
+                            {{ p.time_limit_ms }} ms · {{ p.memory_limit_mb }} MB
+                        </td>
+
+                    </tr>
+
+                {% else %}
+
+                    <tr>
+                        <td colspan="4" class="text-center text-secondary py-5">
+                            No problems match your filters.
+                        </td>
+                    </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+    </div>
+
+</div>
+
+{% endblock %}
+
+
+{% block scripts %}
+<script>
+    // Submit the filter form as soon as a dropdown changes
+    document.querySelectorAll("[data-autosubmit]").forEach(function (select) {
+        select.addEventListener("change", function () {
+            document.getElementById("filters").submit();
+        });
+    });
+</script>
+{% endblock %}

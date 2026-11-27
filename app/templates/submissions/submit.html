@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+
+{% block title %}Submit - {{ problem.title }} - Code Quest{% endblock %}
+
+{% block breadcrumb %}
+    <a href="{{ url_for('problems.index') }}">Problems</a>
+    <span>/</span>
+    <a href="{{ url_for('problems.detail', slug=problem.slug) }}">{{ problem.title }}</a>
+    <span>/</span> Submit
+{% endblock %}
+
+{% block content %}
+
+<a href="{{ url_for('problems.detail', slug=problem.slug) }}" class="small">← Back to problem</a>
+
+{% if contest %}
+    <div class="alert alert-info mt-2 mb-0">
+        You are submitting to the contest
+        <a href="{{ url_for('contests.detail', contest_id=contest.contest_id) }}" class="fw-semibold">{{ contest.title }}</a>.
+    </div>
+{% endif %}
+
+<div class="row g-3 mt-1">
+
+    <!-- Problem statement (for reference while coding) -->
+    <div class="col-lg-5">
+
+        <div class="card p-3" style="max-height: 75vh; overflow-y: auto;">
+
+            <div class="d-flex align-items-start justify-content-between gap-2 mb-2">
+                <h1 class="h5 page-title mb-0">{{ problem.title }}</h1>
+                <span class="badge diff-{{ problem.difficulty }}">{{ problem.difficulty|capitalize }}</span>
+            </div>
+
+            <div class="small text-secondary mb-3">
+                {{ problem.time_limit_ms }} ms · {{ problem.memory_limit_mb }} MB
+            </div>
+
+            <div style="white-space: pre-wrap;">{{ problem.statement }}</div>
+
+        </div>
+
+    </div>
+
+
+    <!-- Editor -->
+    <div class="col-lg-7">
+
+        <form method="post" id="submit-form" class="card p-3" novalidate>
+
+            {{ form.hidden_tag() }}
+
+            <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+
+                {{ form.language_version_id(
+                    class="form-select w-auto" ~ (" is-invalid" if form.language_version_id.errors else ""),
+                    **{"aria-label": "Language"}
+                ) }}
+
+                <button type="submit" class="btn btn-primary ms-auto">
+                    Submit ▶
+                </button>
+
+            </div>
+
+            {% for error in form.language_version_id.errors %}
+                <div class="text-danger small mb-2">{{ error }}</div>
+            {% endfor %}
+
+
+            <div class="tabbar">
+                <span class="on">Solution</span>
+            </div>
+
+            <div class="ed">
+                <pre class="gut" id="gutter">1</pre>
+
+                {{ form.source_code(
+                    class="editor",
+                    id="source",
+                    spellcheck="false",
+                    wrap="off",
+                    placeholder="Write your solution here..."
+                ) }}
+            </div>
+
+            {% for error in form.source_code.errors %}
+                <div class="text-danger small mt-2">{{ error }}</div>
+            {% endfor %}
+
+            <div class="small text-secondary mt-3">
+                Your code is saved as soon as you submit. It will be reviewed and the
+                result updated within 24 hours. <kbd>Ctrl</kbd>+<kbd>Enter</kbd> also submits.
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+{% endblock %}
+
+
+{% block scripts %}
+<script>
+    (function () {
+
+        var editor = document.getElementById("source");
+        var gutter = document.getElementById("gutter");
+        var form = document.getElementById("submit-form");
+
+        // Line numbers
+        function updateGutter() {
+            var lines = editor.value.split("\n").length;
+            var numbers = [];
+            for (var i = 1; i <= lines; i++) numbers.push(i);
+            gutter.textContent = numbers.join("\n");
+        }
+
+        editor.addEventListener("input", updateGutter);
+
+        editor.addEventListener("scroll", function () {
+            gutter.style.transform = "translateY(" + (-editor.scrollTop) + "px)";
+        });
+
+        updateGutter();
+
+
+        // Tab inserts 4 spaces; Ctrl/Cmd + Enter submits
+        editor.addEventListener("keydown", function (event) {
+
+            if (event.key === "Tab") {
+                event.preventDefault();
+                var start = editor.selectionStart;
+                var end = editor.selectionEnd;
+                editor.value = editor.value.substring(0, start) + "    " + editor.value.substring(end);
+                editor.selectionStart = editor.selectionEnd = start + 4;
+                updateGutter();
+            }
+
+            if (event.key === "Enter" && (event.ctrlKey || event.metaKey)) {
+                event.preventDefault();
+                form.requestSubmit();
+            }
+
+        });
+
+    })();
+</script>
+{% endblock %}

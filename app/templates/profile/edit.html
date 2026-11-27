@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+
+{% block title %}Edit profile - Code Quest{% endblock %}
+
+{% block breadcrumb %}
+    <a href="{{ url_for('profile.view', username=current_user.username) }}">Profile</a>
+    <span>/</span> Edit
+{% endblock %}
+
+{% block content %}
+
+<a href="{{ url_for('profile.view', username=current_user.username) }}" class="small">← Back to profile</a>
+
+<h1 class="page-title mt-2 mb-3">Edit profile</h1>
+
+<div class="row g-3">
+
+    <!-- Profile form -->
+    <div class="col-lg-7">
+
+        <form method="post" class="card p-4" novalidate>
+
+            {{ form.hidden_tag() }}
+
+            {% for field, hint in [
+                (form.display_name, ''),
+                (form.country, ''),
+                (form.avatar_url, 'A link to an image, starting with http:// or https://'),
+                (form.github_url, 'Your GitHub profile link.')
+            ] %}
+
+                <div class="mb-3">
+
+                    {{ field.label(class="form-label") }}
+
+                    {{ field(class="form-control" ~ (" is-invalid" if field.errors else "")) }}
+
+                    {% for error in field.errors %}
+                        <div class="text-danger small mt-1">{{ error }}</div>
+                    {% endfor %}
+
+                    {% if hint %}<div class="form-text">{{ hint }}</div>{% endif %}
+
+                </div>
+
+            {% endfor %}
+
+
+            <div class="mb-4">
+
+                {{ form.bio.label(class="form-label") }}
+
+                {{ form.bio(
+                    class="form-control" ~ (" is-invalid" if form.bio.errors else ""),
+                    rows=5,
+                    placeholder="Tell others about yourself"
+                ) }}
+
+                {% for error in form.bio.errors %}
+                    <div class="text-danger small mt-1">{{ error }}</div>
+                {% endfor %}
+
+            </div>
+
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary">Save profile</button>
+                <a href="{{ url_for('profile.view', username=current_user.username) }}" class="btn btn-ghost">Cancel</a>
+            </div>
+
+        </form>
+
+    </div>
+
+
+    <!-- Links -->
+    <div class="col-lg-5">
+
+        <div class="card p-4">
+
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <b>Links</b>
+                <span class="small text-secondary">{{ links|length }} / {{ max_links }}</span>
+            </div>
+
+            {% for l in links %}
+
+                <div class="d-flex align-items-center justify-content-between gap-2 py-2 {% if not loop.first %}border-top{% endif %}">
+
+                    <div class="min-w-0">
+                        <div class="fw-semibold">{{ l.label }}</div>
+                        <div class="small text-secondary text-truncate">{{ l.url }}</div>
+                    </div>
+
+                    <form method="post" action="{{ url_for('profile.delete_link', link_id=l.link_id) }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn btn-ghost btn-sm" aria-label="Remove link">✕</button>
+                    </form>
+
+                </div>
+
+            {% else %}
+
+                <div class="small text-secondary mb-2">No links yet.</div>
+
+            {% endfor %}
+
+
+            {% if links|length < max_links %}
+
+                <form method="post" action="{{ url_for('profile.add_link') }}" class="mt-3" novalidate>
+
+                    {{ link_form.hidden_tag() }}
+
+                    {{ link_form.label(class="form-control mb-2", placeholder="Label (e.g. Portfolio)") }}
+
+                    {{ link_form.url(class="form-control mb-2", placeholder="https://...") }}
+
+                    <button type="submit" class="btn btn-primary w-100">Add link</button>
+
+                </form>
+
+            {% else %}
+
+                <div class="small text-secondary mt-3">You've reached the link limit.</div>
+
+            {% endif %}
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

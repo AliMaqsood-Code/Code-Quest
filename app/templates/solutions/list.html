@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% block title %}Solutions - {{ problem.title }} - Code Quest{% endblock %}
+
+{% block breadcrumb %}
+    <a href="{{ url_for('problems.index') }}">Problems</a>
+    <span>/</span>
+    <a href="{{ url_for('problems.detail', slug=problem.slug) }}">{{ problem.title }}</a>
+    <span>/</span> Solutions
+{% endblock %}
+
+{% block content %}
+
+<a href="{{ url_for('problems.detail', slug=problem.slug) }}" class="small">← Back to problem</a>
+
+<div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mt-2 mb-3">
+
+    <div>
+        <h1 class="page-title mb-1">Solutions</h1>
+        <div class="text-secondary small">{{ problem.title }}</div>
+    </div>
+
+    {% if can_post %}
+        <a href="{{ url_for('solutions.create', slug=problem.slug) }}" class="btn btn-primary">
+            + Publish a solution
+        </a>
+    {% endif %}
+
+</div>
+
+{% if not can_post %}
+    <div class="alert alert-info">
+        {% if current_user %}
+            Solve this problem to publish your own solution.
+        {% else %}
+            <a href="{{ url_for('auth.login') }}" class="auth-link">Sign in</a>
+            and solve this problem to publish your own solution.
+        {% endif %}
+    </div>
+{% endif %}
+
+
+<div class="card">
+
+    {% for s in solutions %}
+
+        <div class="d-flex align-items-start justify-content-between gap-3 px-3 py-3 {% if not loop.first %}border-top{% endif %}">
+
+            <div class="min-w-0">
+
+                <a href="{{ url_for('solutions.detail', solution_id=s.solution_id) }}" class="fw-semibold">
+                    {{ s.title }}
+                </a>
+
+                {% if s.is_official %}
+                    <span class="badge st-accepted ms-1">official</span>
+                {% endif %}
+
+                <div class="small text-secondary mt-1">
+                    {{ s.author.username }}
+                    · {{ s.language_version.language.language_name }} {{ s.language_version.version_label }}
+                    · {{ s.published_at.strftime('%b %d, %Y') }}
+                </div>
+
+            </div>
+
+            <div class="text-nowrap fw-semibold {{ 'text-success' if scores[s.solution_id] > 0 else ('text-danger' if scores[s.solution_id] < 0 else 'text-secondary') }}">
+                ▲ {{ scores[s.solution_id] }}
+            </div>
+
+        </div>
+
+    {% else %}
+
+        <div class="text-center text-secondary py-5">
+            No solutions have been published for this problem yet.
+        </div>
+
+    {% endfor %}
+
+</div>
+
+{% endblock %}

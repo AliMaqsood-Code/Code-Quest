@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+
+{% block title %}Leaderboard - {{ contest.title }} - Code Quest{% endblock %}
+
+{% block breadcrumb %}
+    <a href="{{ url_for('contests.index') }}">Contests</a>
+    <span>/</span>
+    <a href="{{ url_for('contests.detail', contest_id=contest.contest_id) }}">{{ contest.title }}</a>
+    <span>/</span> Leaderboard
+{% endblock %}
+
+{% block content %}
+
+<a href="{{ url_for('contests.detail', contest_id=contest.contest_id) }}" class="small">← Back to contest</a>
+
+<div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mt-2 mb-3">
+
+    <div>
+        <h1 class="page-title mb-1">Leaderboard</h1>
+        <div class="text-secondary small">{{ contest.title }}</div>
+    </div>
+
+    <span class="badge st-{{ phase }} fs-6">{{ phase }}</span>
+
+</div>
+
+{% if phase == 'running' %}
+    <div class="alert alert-info">
+        The contest is running. Rankings update as submissions are reviewed.
+    </div>
+{% endif %}
+
+
+<div class="card">
+
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+
+            <thead>
+                <tr>
+                    <th style="width: 70px;">Rank</th>
+                    <th>User</th>
+                    <th>Solved</th>
+                    <th>Score</th>
+                    <th class="text-end">Penalty</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+                {% for e in entries %}
+
+                    {% set mine = current_user and e.user_id == current_user.user_id %}
+
+                    <tr {% if mine %}style="background: var(--ac-soft);"{% endif %}>
+
+                        <td>
+                            <b class="{% if e.rank_position and e.rank_position <= 3 %}rank-{{ e.rank_position }}{% endif %}">
+                                {{ e.rank_position or '-' }}
+                            </b>
+                        </td>
+
+                        <td>
+                            <a href="{{ url_for('profile.view', username=e.user.username) }}" class="fw-semibold">
+                                {{ e.user.username }}
+                            </a>
+                            {% if mine %}<span class="text-secondary small">(you)</span>{% endif %}
+                        </td>
+
+                        <td>{{ e.solved_count }}</td>
+
+                        <td>{{ "%g"|format(e.score) }}</td>
+
+                        <td class="text-end text-secondary">
+                            {{ "%d:%02d"|format(e.penalty_seconds // 3600, (e.penalty_seconds % 3600) // 60) }}
+                        </td>
+
+                    </tr>
+
+                {% else %}
+
+                    <tr>
+                        <td colspan="5" class="text-center text-secondary py-5">
+                            No participants yet.
+                        </td>
+                    </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+    </div>
+
+</div>
+
+<div class="small text-secondary mt-3">
+    Ranked by score, then lowest penalty. Penalty is time to each accepted solution plus 20 minutes per earlier wrong attempt.
+</div>
+
+{% endblock %}
