@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block title %}Notification preferences - Code Quest{% endblock %}
+
+{% block breadcrumb %}
+    <a href="{{ url_for('notifications.index') }}">Notifications</a>
+    <span>/</span> Preferences
+{% endblock %}
+
+{% block content %}
+
+<div class="row justify-content-center">
+    <div class="col-lg-6">
+
+        <a href="{{ url_for('notifications.index') }}" class="small">← Back to notifications</a>
+
+        <h1 class="page-title mt-2 mb-1">Notification preferences</h1>
+        <div class="text-secondary small mb-3">Choose which alerts you want to receive.</div>
+
+        <form method="post" class="card p-4" novalidate>
+
+            {{ form.hidden_tag() }}
+
+            {% for field, hint in [
+                (form.email_enabled, 'Also receive notifications by email.'),
+                (form.contest_alerts, 'Contest reminders and announcements.'),
+                (form.submission_alerts, 'Updates when your submission is reviewed.'),
+                (form.discussion_alerts, 'Replies to your discussions and comments.')
+            ] %}
+
+                <div class="form-check form-switch mb-3">
+
+                    {{ field(class="form-check-input") }}
+
+                    {{ field.label(class="form-check-label fw-semibold") }}
+
+                    <div class="small text-secondary">{{ hint }}</div>
+
+                </div>
+
+            {% endfor %}
+
+            <div class="mt-2">
+                <button type="submit" class="btn btn-primary">Save preferences</button>
+            </div>
+
+        </form>
+
+    </div>
+</div>
+
+{% endblock %}

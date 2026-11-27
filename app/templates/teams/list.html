@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+
+{% block title %}Teams - Code Quest{% endblock %}
+
+{% block breadcrumb %}
+    <span>Code Quest /</span> Teams
+{% endblock %}
+
+{% block content %}
+
+<!-- Header -->
+<div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-4">
+
+    <div>
+        <h1 class="page-title mb-1">Teams</h1>
+        <div class="text-secondary small">Private groups of coders you can invite by username.</div>
+    </div>
+
+    <div class="d-flex gap-2">
+
+        <a href="{{ url_for('teams.my_invitations') }}" class="btn btn-ghost">
+            Invitations
+            {% if pending_invitations %}
+                <span class="badge text-bg-secondary ms-1">{{ pending_invitations }}</span>
+            {% endif %}
+        </a>
+
+        <a href="{{ url_for('teams.create') }}" class="btn btn-primary">+ New team</a>
+
+    </div>
+
+</div>
+
+
+<div class="row g-3">
+
+    {% for t in teams %}
+
+        <div class="col-md-6 col-xl-4">
+
+            <a href="{{ url_for('teams.detail', team_id=t.team_id) }}" class="card p-3 h-100 d-block">
+
+                <div class="d-flex align-items-start justify-content-between gap-2 mb-2">
+
+                    <b>{{ t.team_name }}</b>
+
+                    {% if t.owner_id == current_user.user_id %}
+                        <span class="badge st-running">owner</span>
+                    {% endif %}
+
+                </div>
+
+                <div class="small text-secondary mb-3">
+                    {{ (t.description or 'No description.')|truncate(100) }}
+                </div>
+
+                <div class="small text-secondary">
+                    {{ t.members|length }} member{{ '' if t.members|length == 1 else 's' }}
+                    · Owner: {{ t.owner.username }}
+                </div>
+
+            </a>
+
+        </div>
+
+    {% else %}
+
+        <div class="col-12">
+            <div class="card p-5 text-center text-secondary">
+                You are not in any team yet.
+                <a href="{{ url_for('teams.create') }}" class="auth-link">Create one</a>
+                or wait for an invitation.
+            </div>
+        </div>
+
+    {% endfor %}
+
+</div>
+
+{% endblock %}

@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+
+{% block title %}Notifications - Code Quest{% endblock %}
+
+{% block breadcrumb %}
+    <span>Code Quest /</span> Notifications
+{% endblock %}
+
+{% block content %}
+
+{% set only_unread = request.args.get('unread') %}
+
+<!-- Header -->
+<div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+
+    <div>
+        <h1 class="page-title mb-1">Notifications</h1>
+        <div class="text-secondary small">
+            {{ unread_count }} unread
+        </div>
+    </div>
+
+    <div class="d-flex flex-wrap gap-2">
+
+        {% if unread_count %}
+            <form method="post" action="{{ url_for('notifications.mark_all_read') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn btn-ghost">Mark all as read</button>
+            </form>
+        {% endif %}
+
+        <a href="{{ url_for('notifications.preferences') }}" class="btn btn-ghost">Preferences</a>
+
+    </div>
+
+</div>
+
+
+<!-- Filter -->
+<div class="d-flex gap-2 mb-3">
+
+    <a href="{{ url_for('notifications.index') }}"
+       class="btn btn-sm {{ 'btn-ghost' if only_unread else 'btn-primary' }}">
+        All
+    </a>
+
+    <a href="{{ url_for('notifications.index', unread=1) }}"
+       class="btn btn-sm {{ 'btn-primary' if only_unread else 'btn-ghost' }}">
+        Unread
+    </a>
+
+</div>
+
+
+<div class="card">
+
+    {% for n in notifications %}
+
+        <div class="d-flex align-items-start justify-content-between gap-3 px-3 py-3 {% if not loop.first %}border-top{% endif %}"
+             {% if not n.read_at %}style="background: var(--ac-soft);"{% endif %}>
+
+            <div class="min-w-0">
+
+                <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
+
+                    <span class="badge st-queued">{{ n.notification_type }}</span>
+
+                    <form method="post" action="{{ url_for('notifications.mark_read', notification_id=n.notification_id) }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn btn-link p-0 text-start fw-semibold">
+                            {{ n.title }}
+                        </button>
+                    </form>
+
+                    {% if not n.read_at %}
+                        <span class="small text-secondary">· new</span>
+                    {% endif %}
+
+                </div>
+
+                <div class="small" style="white-space: pre-wrap;">{{ n.message }}</div>
+
+                <div class="small text-secondary mt-1">
+                    {{ n.created_at.strftime('%b %d, %Y %H:%M') }}
+                </div>
+
+            </div>
+
+            <form method="post" action="{{ url_for('notifications.delete', notification_id=n.notification_id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn btn-ghost btn-sm" title="Delete" aria-label="Delete notification">✕</button>
+            </form>
+
+        </div>
+
+    {% else %}
+
+        <div class="text-center text-secondary py-5">
+            {% if only_unread %}
+                You're all caught up.
+            {% else %}
+                No notifications yet.
+            {% endif %}
+        </div>
+
+    {% endfor %}
+
+</div>
+
+{% endblock %}

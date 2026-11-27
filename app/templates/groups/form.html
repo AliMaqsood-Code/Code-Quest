@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block title %}{{ 'Edit group' if group else 'New group' }} - Code Quest{% endblock %}
+
+{% block breadcrumb %}
+    <a href="{{ url_for('groups.index') }}">Groups</a>
+    <span>/</span> {{ 'Edit' if group else 'New' }}
+{% endblock %}
+
+{% block content %}
+
+<div class="row justify-content-center">
+    <div class="col-lg-7">
+
+        <h1 class="page-title mb-3">{{ 'Edit group' if group else 'Create a group' }}</h1>
+
+        <form method="post" class="card p-4" novalidate>
+
+            {{ form.hidden_tag() }}
+
+            <div class="mb-3">
+
+                {{ form.group_name.label(class="form-label") }}
+
+                {{ form.group_name(
+                    class="form-control" ~ (" is-invalid" if form.group_name.errors else ""),
+                    placeholder="e.g. Study Circle",
+                    autofocus=true
+                ) }}
+
+                {% for error in form.group_name.errors %}
+                    <div class="text-danger small mt-1">{{ error }}</div>
+                {% endfor %}
+
+            </div>
+
+            <div class="mb-4">
+
+                {{ form.description.label(class="form-label") }}
+
+                {{ form.description(
+                    class="form-control" ~ (" is-invalid" if form.description.errors else ""),
+                    rows=5,
+                    placeholder="What is this group about?"
+                ) }}
+
+                {% for error in form.description.errors %}
+                    <div class="text-danger small mt-1">{{ error }}</div>
+                {% endfor %}
+
+            </div>
+
+            <div class="d-flex gap-2">
+
+                <button type="submit" class="btn btn-primary">
+                    {{ 'Save changes' if group else 'Create group' }}
+                </button>
+
+                <a href="{{ url_for('groups.detail', group_id=group.group_id) if group else url_for('groups.index') }}"
+                   class="btn btn-ghost">
+                    Cancel
+                </a>
+
+            </div>
+
+        </form>
+
+    </div>
+</div>
+
+{% endblock %}
