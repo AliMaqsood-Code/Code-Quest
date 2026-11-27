@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+
+{% block title %}{{ 'Edit solution' if solution else 'Publish a solution' }} - Code Quest{% endblock %}
+
+{% block breadcrumb %}
+    <a href="{{ url_for('problems.detail', slug=problem.slug) }}">{{ problem.title }}</a>
+    <span>/</span>
+    <a href="{{ url_for('solutions.index', slug=problem.slug) }}">Solutions</a>
+    <span>/</span> {{ 'Edit' if solution else 'New' }}
+{% endblock %}
+
+{% block content %}
+
+<div class="row justify-content-center">
+    <div class="col-lg-9">
+
+        <h1 class="page-title mb-1">{{ 'Edit solution' if solution else 'Publish a solution' }}</h1>
+        <div class="text-secondary small mb-3">For <b>{{ problem.title }}</b></div>
+
+        <form method="post" class="card p-4" novalidate>
+
+            {{ form.hidden_tag() }}
+
+            <div class="row g-3 mb-3">
+
+                <div class="col-md-8">
+
+                    {{ form.title.label(class="form-label") }}
+
+                    {{ form.title(
+                        class="form-control" ~ (" is-invalid" if form.title.errors else ""),
+                        placeholder="e.g. Hash map in O(n)",
+                        autofocus=true
+                    ) }}
+
+                    {% for error in form.title.errors %}
+                        <div class="text-danger small mt-1">{{ error }}</div>
+                    {% endfor %}
+
+                </div>
+
+                <div class="col-md-4">
+
+                    {{ form.language_version_id.label(class="form-label") }}
+
+                    {{ form.language_version_id(class="form-select") }}
+
+                </div>
+
+            </div>
+
+            <div class="mb-3">
+
+                {{ form.explanation.label(class="form-label") }}
+
+                {{ form.explanation(
+                    class="form-control" ~ (" is-invalid" if form.explanation.errors else ""),
+                    rows=6,
+                    placeholder="Explain your approach and its complexity"
+                ) }}
+
+                {% for error in form.explanation.errors %}
+                    <div class="text-danger small mt-1">{{ error }}</div>
+                {% endfor %}
+
+            </div>
+
+            <div class="mb-4">
+
+                {{ form.source_code.label(class="form-label") }}
+
+                {{ form.source_code(
+                    class="form-control font-monospace" ~ (" is-invalid" if form.source_code.errors else ""),
+                    rows=14,
+                    spellcheck="false",
+                    wrap="off"
+                ) }}
+
+                {% for error in form.source_code.errors %}
+                    <div class="text-danger small mt-1">{{ error }}</div>
+                {% endfor %}
+
+            </div>
+
+            <div class="d-flex gap-2">
+
+                <button type="submit" class="btn btn-primary">
+                    {{ 'Save changes' if solution else 'Publish solution' }}
+                </button>
+
+                <a href="{{ url_for('solutions.detail', solution_id=solution.solution_id) if solution else url_for('solutions.index', slug=problem.slug) }}"
+                   class="btn btn-ghost">
+                    Cancel
+                </a>
+
+            </div>
+
+        </form>
+
+    </div>
+</div>
+
+{% endblock %}

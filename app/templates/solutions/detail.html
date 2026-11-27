@@ -1,0 +1,156 @@
+{% extends "base.html" %}
+
+{% block title %}{{ solution.title }} - Code Quest{% endblock %}
+
+{% block breadcrumb %}
+    <a href="{{ url_for('problems.detail', slug=problem.slug) }}">{{ problem.title }}</a>
+    <span>/</span>
+    <a href="{{ url_for('solutions.index', slug=problem.slug) }}">Solutions</a>
+    <span>/</span> {{ solution.title|truncate(30) }}
+{% endblock %}
+
+{% block content %}
+
+<a href="{{ url_for('solutions.index', slug=problem.slug) }}" class="small">← All solutions</a>
+
+<div class="row g-3 mt-1">
+
+    <!-- Main column -->
+    <div class="col-lg-9">
+
+        <div class="card p-4 mb-3">
+
+            <div class="d-flex flex-wrap align-items-start justify-content-between gap-2 mb-1">
+
+                <h1 class="page-title mb-0">{{ solution.title }}</h1>
+
+                {% if solution.is_official %}
+                    <span class="badge st-accepted">official</span>
+                {% endif %}
+
+            </div>
+
+            <div class="small text-secondary mb-3">
+                By
+                <a href="{{ url_for('profile.view', username=solution.author.username) }}">{{ solution.author.username }}</a>
+                · {{ solution.language_version.language.language_name }} {{ solution.language_version.version_label }}
+                · {{ solution.published_at.strftime('%b %d, %Y') }}
+            </div>
+
+            <b class="mb-2">Explanation</b>
+            <div style="white-space: pre-wrap;">{{ solution.explanation }}</div>
+
+        </div>
+
+
+        <div class="card p-4">
+
+            <div class="d-flex align-items-center justify-content-between mb-2">
+                <b>Code</b>
+                <button type="button" id="copy-code" class="btn btn-ghost btn-sm">Copy</button>
+            </div>
+
+            <pre class="code-block mb-0" id="source-code">{{ solution.source_code }}</pre>
+
+        </div>
+
+    </div>
+
+
+    <!-- Side column -->
+    <div class="col-lg-3">
+
+        <!-- Votes -->
+        <div class="card p-3 mb-3 text-center">
+
+            <div class="lbl text-secondary small">Score</div>
+            <div class="h3 mb-1">{{ score }}</div>
+            <div class="small text-secondary mb-3">▲ {{ upvotes }} · ▼ {{ downvotes }}</div>
+
+            {% if current_user and not is_author %}
+
+                <form method="post" action="{{ url_for('solutions.vote', solution_id=solution.solution_id) }}" class="d-flex gap-2">
+
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                    <button type="submit" name="vote_value" value="1"
+                            class="btn btn-sm flex-fill {{ 'btn-primary' if my_vote == 1 else 'btn-ghost' }}">
+                        ▲ Upvote
+                    </button>
+
+                    <button type="submit" name="vote_value" value="-1"
+                            class="btn btn-sm flex-fill {{ 'btn-primary' if my_vote == -1 else 'btn-ghost' }}">
+                        ▼ Down
+                    </button>
+
+                </form>
+
+                <div class="small text-secondary mt-2">Click your vote again to remove it.</div>
+
+            {% elif is_author %}
+
+                <div class="small text-secondary">You can't vote on your own solution.</div>
+
+            {% else %}
+
+                <div class="small text-secondary">
+                    <a href="{{ url_for('auth.login') }}" class="auth-link">Sign in</a> to vote.
+                </div>
+
+            {% endif %}
+
+        </div>
+
+
+        <!-- Author / moderator actions -->
+        {% if is_author or can_moderate %}
+
+            <div class="card p-3">
+
+                {% if is_author %}
+                    <a href="{{ url_for('solutions.edit', solution_id=solution.solution_id) }}" class="btn btn-ghost w-100 mb-2">
+                        Edit
+                    </a>
+                {% endif %}
+
+                {% if can_moderate %}
+                    <form method="post" action="{{ url_for('solutions.toggle_official', solution_id=solution.solution_id) }}" class="mb-2">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn btn-ghost w-100">
+                            {{ 'Remove official mark' if solution.is_official else 'Mark as official' }}
+                        </button>
+                    </form>
+                {% endif %}
+
+                <form method="post" action="{{ url_for('solutions.delete', solution_id=solution.solution_id) }}"
+                      onsubmit="return confirm('Delete this solution and its votes?');">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-ghost w-100">Delete</button>
+                </form>
+
+            </div>
+
+        {% endif %}
+
+    </div>
+
+</div>
+
+{% endblock %}
+
+
+{% block scripts %}
+<script>
+    document.getElementById("copy-code").addEventListener("click", function () {
+
+        var button = this;
+        var code = document.getElementById("source-code").textContent;
+
+        navigator.clipboard.writeText(code).then(function () {
+            button.textContent = "Copied ✓";
+            setTimeout(function () { button.textContent = "Copy"; }, 1500);
+        });
+
+    });
+</script>
+{% endblock %}
